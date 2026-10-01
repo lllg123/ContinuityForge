@@ -1,0 +1,26 @@
+# MoonBit build output
+_build/
+
+# JavaScript and TypeScript dependencies/build output
+node_modules/
+dist/
+coverage/
+
+# Local databases and runtime data
+*.db
+*.db-shm
+*.db-wal
+data/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
