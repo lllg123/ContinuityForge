@@ -6,7 +6,7 @@ ContinuityForge 是一个面向组织内部的系统韧性与业务连续性平�
 
 ## 当前阶段
 
-当前仓库处于第 1 次提交：完成 MVP 范围、目录约定和协作规则。业务模型、MoonBit 核心、服务端和 Web 界面会在后续独立提交中逐步加入；当前版本不提供可运行的业务功能。
+当前仓库处于构建脚手架阶段：已建立 MoonBit 模块和 JavaScript 目标的最小验证入口。业务模型、服务端和 Web 界面会在后续独立提交中逐步加入。
 
 ## 产品边界
 
@@ -24,12 +24,12 @@ ContinuityForge 是一个面向组织内部的系统韧性与业务连续性平�
 
 ```text
 ContinuityForge/
-├── core/       # MoonBit 领域模型与确定性算法
+├── core.mbt    # MoonBit 核心包入口（当前仅含集成探针）
 ├── server/     # API、权限、持久化和输入校验
 ├── web/        # Web 界面
 ├── docs/       # 架构、运行和操作文档
 ├── examples/   # 脱敏的演示数据
-└── PLAN.md     # 分阶段交付计划
+└── integration/ # 跨语言构建与集成验证
 ```
 
 目录会在对应功能提交中创建，当前阶段只保留仓库级文档。
@@ -41,7 +41,20 @@ ContinuityForge/
 3. 真实生产操作由宿主系统负责，平台只生成计划和记录结果。
 4. 配置、示例和提交历史中不得出现密码、令牌或其他敏感凭据。
 
-完整的 15 次提交计划、验收点和后续启动顺序见 [PLAN.md](PLAN.md)。
+每次功能提交都应保持范围清晰，并在提交信息中说明对应的验收结果。
+
+## 本地验证
+
+需要安装 MoonBit 工具链和 Node.js。仓库根目录可运行：
+
+```text
+moon fmt
+moon check --deny-warn
+moon build --target js --deny-warn
+node integration/js/smoke.mjs
+```
+
+最后一条命令会启动 MoonBit 的 JavaScript 目标探针，并检查核心包返回的稳定标记。
 
 ## 许可证
 
