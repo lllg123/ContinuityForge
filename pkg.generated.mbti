@@ -5,8 +5,46 @@ package "lllg123/continuity_forge"
 pub fn integration_probe() -> String
 
 // Errors
+pub(all) suberror ModelError {
+  EmptyField(String)
+  SelfDependency(String)
+}
 
 // Types and methods
+pub(all) enum AssetRef {
+  Service(ServiceId)
+  Component(ComponentId)
+}
+
+pub(all) struct BusinessService {
+  id : ServiceId
+  name : String
+  owner : String
+}
+pub fn BusinessService::new(id~ : ServiceId, name~ : String, owner~ : String) -> Self raise ModelError
+
+pub(all) struct ComponentId {
+  value : String
+}
+pub fn ComponentId::new(value~ : String) -> Self raise ModelError
+
+pub(all) struct Dependency {
+  dependent : AssetRef
+  dependency : AssetRef
+}
+pub fn Dependency::new(dependent~ : AssetRef, dependency~ : AssetRef) -> Self raise ModelError
+
+pub(all) struct ServiceId {
+  value : String
+}
+pub fn ServiceId::new(value~ : String) -> Self raise ModelError
+
+pub(all) struct TechnicalComponent {
+  id : ComponentId
+  name : String
+  technology : String
+}
+pub fn TechnicalComponent::new(id~ : ComponentId, name~ : String, technology~ : String) -> Self raise ModelError
 
 // Type aliases
 
