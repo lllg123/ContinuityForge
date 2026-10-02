@@ -2,12 +2,20 @@
 package "lllg123/continuity_forge"
 
 // Values
+pub fn dependency_order(Array[AssetRef], Array[Dependency]) -> Array[AssetRef] raise ModelError
+
 pub fn integration_probe() -> String
+
+pub fn validate_dependency_graph(Array[AssetRef], Array[Dependency]) -> Unit raise ModelError
 
 // Errors
 pub(all) suberror ModelError {
   EmptyField(String)
   SelfDependency(String)
+  DuplicateAsset(String)
+  MissingAsset(String)
+  DuplicateDependency(String)
+  DependencyCycle(String)
 }
 
 // Types and methods

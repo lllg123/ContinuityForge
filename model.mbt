@@ -3,6 +3,10 @@
 pub(all) suberror ModelError {
   EmptyField(String)
   SelfDependency(String)
+  DuplicateAsset(String)
+  MissingAsset(String)
+  DuplicateDependency(String)
+  DependencyCycle(String)
 }
 
 ///|
