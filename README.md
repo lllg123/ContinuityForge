@@ -6,7 +6,7 @@ ContinuityForge 是一个面向组织内部的系统韧性与业务连续性平�
 
 ## 当前阶段
 
-当前仓库已建立 MoonBit 模块、JavaScript 目标验证入口，以及业务服务、技术组件和依赖图校验。影响分析、服务端和 Web 界面会在后续独立提交中逐步加入。
+当前仓库已建立 MoonBit 模块、JavaScript 目标验证入口、依赖图校验和业务影响分析（BIA）模型。故障传播、服务端和 Web 界面会在后续独立提交中逐步加入。
 
 ## 产品边界
 
@@ -27,6 +27,7 @@ ContinuityForge/
 ├── core.mbt    # MoonBit 核心包入口与集成探针
 ├── model.mbt   # 服务、组件和依赖领域模型
 ├── dependency.mbt # 拓扑排序与循环依赖校验
+├── bia.mbt     # RTO、RPO、最大中断时间与影响等级
 ├── server/     # API、权限、持久化和输入校验
 ├── web/        # Web 界面
 ├── docs/       # 架构、运行和操作文档

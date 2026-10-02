@@ -7,6 +7,9 @@ pub(all) suberror ModelError {
   MissingAsset(String)
   DuplicateDependency(String)
   DependencyCycle(String)
+  InvalidImpactScore(String)
+  InvalidDuration(String)
+  InvalidBia(String)
 }
 
 ///|

@@ -1,6 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "lllg123/continuity_forge"
 
+import {
+  "moonbitlang/core/debug",
+}
+
 // Values
 pub fn dependency_order(Array[AssetRef], Array[Dependency]) -> Array[AssetRef] raise ModelError
 
@@ -16,6 +20,9 @@ pub(all) suberror ModelError {
   MissingAsset(String)
   DuplicateDependency(String)
   DependencyCycle(String)
+  InvalidImpactScore(String)
+  InvalidDuration(String)
+  InvalidBia(String)
 }
 
 // Types and methods
@@ -23,6 +30,16 @@ pub(all) enum AssetRef {
   Service(ServiceId)
   Component(ComponentId)
 }
+
+pub(all) struct BusinessImpactAssessment {
+  service_id : ServiceId
+  impact_score : Int
+  impact_level : ImpactLevel
+  rto : TimeSpan
+  rpo : TimeSpan
+  max_tolerable_downtime : TimeSpan
+}
+pub fn BusinessImpactAssessment::new(service_id~ : ServiceId, impact_score~ : Int, rto~ : TimeSpan, rpo~ : TimeSpan, max_tolerable_downtime~ : TimeSpan) -> Self raise ModelError
 
 pub(all) struct BusinessService {
   id : ServiceId
@@ -42,6 +59,17 @@ pub(all) struct Dependency {
 }
 pub fn Dependency::new(dependent~ : AssetRef, dependency~ : AssetRef) -> Self raise ModelError
 
+pub(all) enum ImpactLevel {
+  Low
+  Medium
+  High
+  Critical
+} derive(Eq, @debug.Debug)
+pub fn ImpactLevel::equal(Self, Self) -> Bool
+pub fn ImpactLevel::from_score(Int) -> Self raise ModelError
+pub fn ImpactLevel::not_equal(Self, Self) -> Bool
+pub fn ImpactLevel::to_repr(Self) -> @debug.Repr
+
 pub(all) struct ServiceId {
   value : String
 }
@@ -53,6 +81,19 @@ pub(all) struct TechnicalComponent {
   technology : String
 }
 pub fn TechnicalComponent::new(id~ : ComponentId, name~ : String, technology~ : String) -> Self raise ModelError
+
+pub(all) struct TimeSpan {
+  amount : Int
+  unit : TimeUnit
+}
+pub fn TimeSpan::as_minutes(Self) -> Int
+pub fn TimeSpan::new(amount~ : Int, unit~ : TimeUnit) -> Self raise ModelError
+
+pub(all) enum TimeUnit {
+  Minutes
+  Hours
+  Days
+}
 
 // Type aliases
 
