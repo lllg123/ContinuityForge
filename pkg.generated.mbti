@@ -29,6 +29,10 @@ pub(all) suberror ModelError {
   InvalidBia(String)
   RecoveryResourceConflict(String)
   RecoveryTargetUnmet(String)
+  PlaybookValidation(String)
+  StepNotFound(String)
+  StepBlocked(String)
+  InvalidStepTransition(String)
 }
 
 // Types and methods
@@ -87,6 +91,12 @@ pub(all) struct IncidentImpact {
   paths : Array[ImpactPath]
 }
 
+pub(all) enum PlaybookStatus {
+  Draft
+  Active
+  Completed
+}
+
 pub(all) struct RecoveryConstraints {
   target_window : TimeSpan
   available_resources : Array[String]
@@ -107,10 +117,37 @@ pub(all) struct RecoveryPlan {
   target_window_minutes : Int
 }
 
+pub(all) struct RecoveryPlaybook {
+  id : String
+  steps : Array[RecoveryStep]
+  status : PlaybookStatus
+}
+pub fn RecoveryPlaybook::approve_step(Self, step_id~ : String) -> Self raise ModelError
+pub fn RecoveryPlaybook::begin_step(Self, step_id~ : String) -> Self raise ModelError
+pub fn RecoveryPlaybook::complete_step(Self, step_id~ : String) -> Self raise ModelError
+pub fn RecoveryPlaybook::new(id~ : String, steps~ : Array[RecoveryStep]) -> Self raise ModelError
+
+pub(all) struct RecoveryStep {
+  id : String
+  asset : AssetRef
+  owner : String
+  requires_approval : Bool
+  prerequisites : Array[String]
+  status : StepStatus
+}
+pub fn RecoveryStep::new(id~ : String, asset~ : AssetRef, owner~ : String, requires_approval~ : Bool, prerequisites~ : Array[String]) -> Self raise ModelError
+
 pub(all) struct ServiceId {
   value : String
 }
 pub fn ServiceId::new(value~ : String) -> Self raise ModelError
+
+pub(all) enum StepStatus {
+  Pending
+  AwaitingApproval
+  InProgress
+  Succeeded
+}
 
 pub(all) struct TechnicalComponent {
   id : ComponentId

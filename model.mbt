@@ -12,6 +12,10 @@ pub(all) suberror ModelError {
   InvalidBia(String)
   RecoveryResourceConflict(String)
   RecoveryTargetUnmet(String)
+  PlaybookValidation(String)
+  StepNotFound(String)
+  StepBlocked(String)
+  InvalidStepTransition(String)
 }
 
 ///|
