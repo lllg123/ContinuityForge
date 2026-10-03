@@ -10,6 +10,8 @@ pub fn dependency_order(Array[AssetRef], Array[Dependency]) -> Array[AssetRef] r
 
 pub fn integration_probe() -> String
 
+pub fn prioritize_recovery(items~ : Array[RecoveryItem], dependencies~ : Array[Dependency], constraints~ : RecoveryConstraints) -> RecoveryPlan raise ModelError
+
 pub fn simulate_incident_impact(failed_asset~ : AssetRef, assets~ : Array[AssetRef], dependencies~ : Array[Dependency]) -> IncidentImpact raise ModelError
 
 pub fn validate_dependency_graph(Array[AssetRef], Array[Dependency]) -> Unit raise ModelError
@@ -25,6 +27,8 @@ pub(all) suberror ModelError {
   InvalidImpactScore(String)
   InvalidDuration(String)
   InvalidBia(String)
+  RecoveryResourceConflict(String)
+  RecoveryTargetUnmet(String)
 }
 
 // Types and methods
@@ -81,6 +85,26 @@ pub(all) struct IncidentImpact {
   failed_asset : AssetRef
   affected : Array[AssetRef]
   paths : Array[ImpactPath]
+}
+
+pub(all) struct RecoveryConstraints {
+  target_window : TimeSpan
+  available_resources : Array[String]
+}
+pub fn RecoveryConstraints::new(target_window~ : TimeSpan, available_resources~ : Array[String]) -> Self raise ModelError
+
+pub(all) struct RecoveryItem {
+  asset : AssetRef
+  impact_level : ImpactLevel
+  recovery_time : TimeSpan
+  resource : String
+}
+pub fn RecoveryItem::new(asset~ : AssetRef, impact_level~ : ImpactLevel, recovery_time~ : TimeSpan, resource~ : String) -> Self raise ModelError
+
+pub(all) struct RecoveryPlan {
+  ordered : Array[RecoveryItem]
+  total_time_minutes : Int
+  target_window_minutes : Int
 }
 
 pub(all) struct ServiceId {

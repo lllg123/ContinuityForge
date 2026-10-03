@@ -10,6 +10,8 @@ pub(all) suberror ModelError {
   InvalidImpactScore(String)
   InvalidDuration(String)
   InvalidBia(String)
+  RecoveryResourceConflict(String)
+  RecoveryTargetUnmet(String)
 }
 
 ///|
