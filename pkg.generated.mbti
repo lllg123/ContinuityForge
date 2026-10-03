@@ -10,6 +10,8 @@ pub fn dependency_order(Array[AssetRef], Array[Dependency]) -> Array[AssetRef] r
 
 pub fn integration_probe() -> String
 
+pub fn simulate_incident_impact(failed_asset~ : AssetRef, assets~ : Array[AssetRef], dependencies~ : Array[Dependency]) -> IncidentImpact raise ModelError
+
 pub fn validate_dependency_graph(Array[AssetRef], Array[Dependency]) -> Unit raise ModelError
 
 // Errors
@@ -69,6 +71,17 @@ pub fn ImpactLevel::equal(Self, Self) -> Bool
 pub fn ImpactLevel::from_score(Int) -> Self raise ModelError
 pub fn ImpactLevel::not_equal(Self, Self) -> Bool
 pub fn ImpactLevel::to_repr(Self) -> @debug.Repr
+
+pub(all) struct ImpactPath {
+  affected_asset : AssetRef
+  path : Array[AssetRef]
+}
+
+pub(all) struct IncidentImpact {
+  failed_asset : AssetRef
+  affected : Array[AssetRef]
+  paths : Array[ImpactPath]
+}
 
 pub(all) struct ServiceId {
   value : String
