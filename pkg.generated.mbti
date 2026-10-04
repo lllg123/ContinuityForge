@@ -6,13 +6,35 @@ import {
 }
 
 // Values
+pub fn assess_business_impact(service_id~ : ServiceId, impact_score~ : Int, rto~ : TimeSpan, rpo~ : TimeSpan, max_tolerable_downtime~ : TimeSpan) -> BusinessImpactAssessment raise ModelError
+
+pub fn create_drill(id~ : String, playbook~ : RecoveryPlaybook) -> RecoveryDrill raise ModelError
+
+pub fn create_playbook(id~ : String, steps~ : Array[RecoveryStep]) -> RecoveryPlaybook raise ModelError
+
+pub fn create_recovery_step(id~ : String, asset~ : AssetRef, owner~ : String, requires_approval~ : Bool, prerequisites~ : Array[String]) -> RecoveryStep raise ModelError
+
+pub fn define_dependency(dependent~ : AssetRef, dependency~ : AssetRef) -> Dependency raise ModelError
+
 pub fn dependency_order(Array[AssetRef], Array[Dependency]) -> Array[AssetRef] raise ModelError
 
 pub fn integration_probe() -> String
 
+pub fn order_dependencies(assets~ : Array[AssetRef], dependencies~ : Array[Dependency]) -> Array[AssetRef] raise ModelError
+
+pub fn plan_recovery(items~ : Array[RecoveryItem], dependencies~ : Array[Dependency], constraints~ : RecoveryConstraints) -> RecoveryPlan raise ModelError
+
 pub fn prioritize_recovery(items~ : Array[RecoveryItem], dependencies~ : Array[Dependency], constraints~ : RecoveryConstraints) -> RecoveryPlan raise ModelError
 
+pub fn register_component(id~ : ComponentId, name~ : String, technology~ : String) -> TechnicalComponent raise ModelError
+
+pub fn register_service(id~ : ServiceId, name~ : String, owner~ : String) -> BusinessService raise ModelError
+
+pub fn simulate_impact(failed_asset~ : AssetRef, assets~ : Array[AssetRef], dependencies~ : Array[Dependency]) -> IncidentImpact raise ModelError
+
 pub fn simulate_incident_impact(failed_asset~ : AssetRef, assets~ : Array[AssetRef], dependencies~ : Array[Dependency]) -> IncidentImpact raise ModelError
+
+pub fn validate_dependencies(assets~ : Array[AssetRef], dependencies~ : Array[Dependency]) -> Unit raise ModelError
 
 pub fn validate_dependency_graph(Array[AssetRef], Array[Dependency]) -> Unit raise ModelError
 
