@@ -60,6 +60,9 @@ pub(all) suberror ModelError {
   StorageValidation(String)
   ProjectNotFound(String)
   DuplicateAuditRecord(String)
+  DuplicateUser(String)
+  UserNotFound(String)
+  AccessDenied(String)
 }
 
 // Types and methods
@@ -159,6 +162,34 @@ pub(all) struct IncidentImpact {
   paths : Array[ImpactPath]
 }
 
+pub(all) struct LocalAuthStore {
+  users : Array[LocalUser]
+}
+pub fn LocalAuthStore::activate_user(Self, user_id~ : String) -> Self raise ModelError
+pub fn LocalAuthStore::authorize(Self, user_id~ : String, permission~ : Permission) -> Unit raise ModelError
+pub fn LocalAuthStore::can(Self, user_id~ : String, permission~ : Permission) -> Bool
+pub fn LocalAuthStore::deactivate_user(Self, user_id~ : String) -> Self raise ModelError
+pub fn LocalAuthStore::get_user(Self, user_id~ : String) -> LocalUser?
+pub fn LocalAuthStore::list_users(Self) -> Array[LocalUser]
+pub fn LocalAuthStore::new() -> Self
+pub fn LocalAuthStore::register_user(Self, user~ : LocalUser) -> Self raise ModelError
+
+pub(all) struct LocalUser {
+  id : String
+  username : String
+  role : Role
+  active : Bool
+}
+pub fn LocalUser::new(id~ : String, username~ : String, role~ : Role) -> Self raise ModelError
+
+pub(all) enum Permission {
+  ReadProjects
+  ReadAudit
+  RunDrills
+  ApproveRecovery
+  ManageUsers
+}
+
 pub(all) enum PlaybookStatus {
   Draft
   Active
@@ -225,6 +256,14 @@ pub(all) struct RecoveryStep {
   status : StepStatus
 }
 pub fn RecoveryStep::new(id~ : String, asset~ : AssetRef, owner~ : String, requires_approval~ : Bool, prerequisites~ : Array[String]) -> Self raise ModelError
+
+pub(all) enum Role {
+  Viewer
+  Operator
+  Approver
+  Administrator
+}
+pub fn Role::allows(Self, Permission) -> Bool
 
 pub(all) struct ServiceId {
   value : String

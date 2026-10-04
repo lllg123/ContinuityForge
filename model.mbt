@@ -21,6 +21,9 @@ pub(all) suberror ModelError {
   StorageValidation(String)
   ProjectNotFound(String)
   DuplicateAuditRecord(String)
+  DuplicateUser(String)
+  UserNotFound(String)
+  AccessDenied(String)
 }
 
 ///|
