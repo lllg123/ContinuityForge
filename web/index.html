@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="ContinuityForge 系统韧性与业务连续性工作区"
+    />
+    <title>ContinuityForge · Resilience workspace</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="./index.html" aria-label="ContinuityForge 首页">
+          <span class="brand-mark">CF</span>
+          <span>
+            <strong>ContinuityForge</strong>
+            <small>resilience workspace</small>
+          </span>
+        </a>
+
+        <div class="workspace-switcher">
+          <span class="eyebrow">WORKSPACE</span>
+          <button class="workspace-select" type="button">
+            <span class="workspace-avatar">C</span>
+            <span class="workspace-name">Commerce continuity</span>
+            <span class="chevron">⌄</span>
+          </button>
+        </div>
+
+        <nav class="primary-nav" aria-label="主导航">
+          <span class="eyebrow">OPERATIONS</span>
+          <button class="nav-item active" type="button" data-view-target="inventory">
+            <span class="nav-icon">▦</span>
+            <span>Inventory</span>
+            <span class="nav-count" id="nav-asset-count">3</span>
+          </button>
+          <button class="nav-item" type="button" data-view-target="bia">
+            <span class="nav-icon">◒</span>
+            <span>Business impact</span>
+            <span class="nav-count" id="nav-bia-count">2</span>
+          </button>
+          <button class="nav-item disabled" type="button" disabled>
+            <span class="nav-icon">↗</span>
+            <span>Recovery plans</span>
+            <span class="soon-label">SOON</span>
+          </button>
+          <button class="nav-item disabled" type="button" disabled>
+            <span class="nav-icon">◎</span>
+            <span>Drill log</span>
+            <span class="soon-label">SOON</span>
+          </button>
+        </nav>
+
+        <nav class="secondary-nav" aria-label="设置导航">
+          <span class="eyebrow">GOVERNANCE</span>
+          <button class="nav-item disabled" type="button" disabled>
+            <span class="nav-icon">◫</span>
+            <span>Audit records</span>
+          </button>
+          <button class="nav-item disabled" type="button" disabled>
+            <span class="nav-icon">⚙</span>
+            <span>Workspace settings</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="local-badge"><span></span> Local workspace</div>
+          <p>Changes are saved in this browser.</p>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="breadcrumb">
+            <span>Workspace</span>
+            <span class="breadcrumb-separator">/</span>
+            <strong id="breadcrumb-current">Inventory</strong>
+          </div>
+          <div class="topbar-actions">
+            <button class="icon-button" type="button" aria-label="帮助">?</button>
+            <span class="topbar-divider"></span>
+            <div class="user-chip">
+              <span class="user-avatar">CO</span>
+              <span>
+                <strong>Continuity operator</strong>
+                <small>Local session</small>
+              </span>
+              <span class="chevron">⌄</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="page-heading">
+          <div>
+            <span class="eyebrow accent-eyebrow" id="page-kicker">SYSTEM INVENTORY</span>
+            <h1 id="page-title">Know what keeps the business running.</h1>
+            <p id="page-description">
+              Keep services, components, ownership, and dependencies ready for the next continuity decision.
+            </p>
+          </div>
+          <div class="heading-actions">
+            <span class="last-saved" id="last-saved">Saved locally · just now</span>
+            <button class="button button-primary" id="primary-action" type="button">
+              <span>＋</span> Add asset
+            </button>
+          </div>
+        </section>
+
+        <section class="metric-grid" aria-label="工作区概览">
+          <article class="metric-card">
+            <div class="metric-label"><span class="metric-dot blue"></span>Tracked assets</div>
+            <strong class="metric-value" id="metric-assets">3</strong>
+            <span class="metric-foot">services &amp; components</span>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label"><span class="metric-dot red"></span>Critical exposure</div>
+            <strong class="metric-value" id="metric-critical">1</strong>
+            <span class="metric-foot">needs recovery priority</span>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label"><span class="metric-dot amber"></span>Open dependencies</div>
+            <strong class="metric-value" id="metric-dependencies">2</strong>
+            <span class="metric-foot">dependency edges mapped</span>
+          </article>
+          <article class="metric-card">
+            <div class="metric-label"><span class="metric-dot green"></span>BIA coverage</div>
+            <strong class="metric-value" id="metric-coverage">67%</strong>
+            <span class="metric-foot">services assessed</span>
+          </article>
+        </section>
+
+        <section class="workspace-view active" id="inventory-view" data-view="inventory">
+          <div class="section-toolbar">
+            <div>
+              <h2>Asset inventory</h2>
+              <p>One source of truth for the systems behind critical work.</p>
+            </div>
+            <label class="search-box">
+              <span>⌕</span>
+              <input id="inventory-search" type="search" placeholder="Search assets" />
+            </label>
+          </div>
+
+          <div class="content-grid">
+            <section class="panel table-panel">
+              <div class="panel-header">
+                <div>
+                  <span class="eyebrow">INVENTORY VIEW</span>
+                  <h3>Services &amp; components</h3>
+                </div>
+                <button class="text-button" id="clear-search" type="button">Clear search</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Asset</th>
+                      <th>Type</th>
+                      <th>Owner</th>
+                      <th>Criticality</th>
+                      <th>Dependencies</th>
+                      <th><span class="sr-only">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody id="inventory-table"></tbody>
+                </table>
+              </div>
+              <div class="empty-state hidden" id="inventory-empty">
+                <span class="empty-icon">⌕</span>
+                <strong>No matching assets</strong>
+                <p>Try a different name, owner, or type.</p>
+              </div>
+            </section>
+
+            <aside class="panel insight-panel">
+              <div class="panel-header compact">
+                <div>
+                  <span class="eyebrow">CONTINUITY SIGNAL</span>
+                  <h3>Coverage snapshot</h3>
+                </div>
+                <span class="signal-icon">↗</span>
+              </div>
+              <div class="signal-score">
+                <strong id="signal-score">72</strong>
+                <span>/ 100</span>
+              </div>
+              <p class="signal-copy">Your inventory is taking shape. Complete BIA for the remaining service to unlock a reliable recovery view.</p>
+              <div class="progress-track"><span id="signal-progress"></span></div>
+              <div class="signal-meta"><span>Readiness signal</span><strong id="signal-label">Building</strong></div>
+              <div class="divider"></div>
+              <div class="mini-list">
+                <div><span class="status-dot green"></span><span>Owners assigned</span><strong id="owner-count">3/3</strong></div>
+                <div><span class="status-dot amber"></span><span>BIA completed</span><strong id="bia-count">2/3</strong></div>
+                <div><span class="status-dot blue"></span><span>Dependencies mapped</span><strong id="dependency-count">2</strong></div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="workspace-view" id="bia-view" data-view="bia">
+          <div class="section-toolbar">
+            <div>
+              <h2>Business impact analysis</h2>
+              <p>Translate service criticality into recovery targets your team can act on.</p>
+            </div>
+            <div class="view-tag"><span class="status-dot amber"></span>Draft workspace</div>
+          </div>
+
+          <div class="content-grid bia-grid">
+            <section class="panel table-panel">
+              <div class="panel-header">
+                <div>
+                  <span class="eyebrow">BIA REGISTER</span>
+                  <h3>Recovery targets</h3>
+                </div>
+                <span class="table-note">Minutes unless stated</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Service</th>
+                      <th>Impact score</th>
+                      <th>Impact level</th>
+                      <th>RTO</th>
+                      <th>RPO</th>
+                      <th>Max downtime</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bia-table"></tbody>
+                </table>
+              </div>
+              <div class="empty-state hidden" id="bia-empty">
+                <span class="empty-icon">◒</span>
+                <strong>No BIA records yet</strong>
+                <p>Use the form to assess your first service.</p>
+              </div>
+            </section>
+
+            <aside class="panel form-panel">
+              <div class="panel-header compact">
+                <div>
+                  <span class="eyebrow">ASSESS SERVICE</span>
+                  <h3>Business impact inputs</h3>
+                </div>
+              </div>
+              <form id="bia-form">
+                <label class="field">
+                  <span>Service</span>
+                  <select id="bia-service" required></select>
+                </label>
+                <label class="field">
+                  <span>Impact score <em>0–100</em></span>
+                  <input id="bia-score" type="number" min="0" max="100" value="70" required />
+                </label>
+                <div class="field-row">
+                  <label class="field">
+                    <span>RTO <em>minutes</em></span>
+                    <input id="bia-rto" type="number" min="0" value="60" required />
+                  </label>
+                  <label class="field">
+                    <span>RPO <em>minutes</em></span>
+                    <input id="bia-rpo" type="number" min="0" value="30" required />
+                  </label>
+                </div>
+                <label class="field">
+                  <span>Maximum tolerable downtime <em>minutes</em></span>
+                  <input id="bia-downtime" type="number" min="1" value="240" required />
+                </label>
+                <div class="form-hint"><span>i</span> RTO and RPO must stay within the maximum tolerable downtime.</div>
+                <button class="button button-primary full-width" type="submit">Save BIA assessment</button>
+              </form>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog class="modal" id="asset-modal">
+      <form method="dialog" class="modal-card" id="asset-form">
+        <div class="modal-header">
+          <div>
+            <span class="eyebrow accent-eyebrow">NEW INVENTORY ITEM</span>
+            <h2>Add an asset</h2>
+          </div>
+          <button class="icon-button close-button" id="close-asset" type="button" aria-label="关闭">×</button>
+        </div>
+        <p class="modal-copy">Capture the owner and criticality now; dependency mapping can follow.</p>
+        <label class="field">
+          <span>Asset name</span>
+          <input id="asset-name" type="text" placeholder="e.g. fraud-scoring" required />
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span>Type</span>
+            <select id="asset-type">
+              <option value="Service">Business service</option>
+              <option value="Component">Technical component</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Criticality</span>
+            <select id="asset-criticality">
+              <option value="Critical">Critical</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </label>
+        </div>
+        <label class="field">
+          <span>Owner</span>
+          <input id="asset-owner" type="text" placeholder="e.g. Platform team" required />
+        </label>
+        <div class="modal-actions">
+          <button class="button button-quiet" id="cancel-asset" type="button">Cancel</button>
+          <button class="button button-primary" id="save-asset" type="submit">Add asset</button>
+        </div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
