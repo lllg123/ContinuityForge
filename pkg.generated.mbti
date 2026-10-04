@@ -33,6 +33,8 @@ pub(all) suberror ModelError {
   StepNotFound(String)
   StepBlocked(String)
   InvalidStepTransition(String)
+  DrillValidation(String)
+  InvalidDrillTransition(String)
 }
 
 // Types and methods
@@ -40,6 +42,23 @@ pub(all) enum AssetRef {
   Service(ServiceId)
   Component(ComponentId)
 }
+
+pub(all) enum AuditAction {
+  DrillStarted
+  StepStarted
+  StepApproved
+  StepCompleted
+  DrillFinished
+}
+
+pub(all) struct AuditEvent {
+  sequence : Int
+  timestamp_minutes : Int
+  actor : String
+  action : AuditAction
+  step_id : String?
+}
+pub fn AuditEvent::new(sequence~ : Int, timestamp_minutes~ : Int, actor~ : String, action~ : AuditAction, step_id~ : String?) -> Self raise ModelError
 
 pub(all) struct BusinessImpactAssessment {
   service_id : ServiceId
@@ -68,6 +87,12 @@ pub(all) struct Dependency {
   dependency : AssetRef
 }
 pub fn Dependency::new(dependent~ : AssetRef, dependency~ : AssetRef) -> Self raise ModelError
+
+pub(all) enum DrillStatus {
+  Planned
+  Running
+  Completed
+}
 
 pub(all) enum ImpactLevel {
   Low
@@ -102,6 +127,20 @@ pub(all) struct RecoveryConstraints {
   available_resources : Array[String]
 }
 pub fn RecoveryConstraints::new(target_window~ : TimeSpan, available_resources~ : Array[String]) -> Self raise ModelError
+
+pub(all) struct RecoveryDrill {
+  id : String
+  playbook : RecoveryPlaybook
+  status : DrillStatus
+  timeline : Array[AuditEvent]
+}
+pub fn RecoveryDrill::approve_step(Self, step_id~ : String, actor~ : String, timestamp_minutes~ : Int) -> Self raise ModelError
+pub fn RecoveryDrill::audit_timeline(Self) -> Array[AuditEvent]
+pub fn RecoveryDrill::begin_step(Self, step_id~ : String, actor~ : String, timestamp_minutes~ : Int) -> Self raise ModelError
+pub fn RecoveryDrill::complete_step(Self, step_id~ : String, actor~ : String, timestamp_minutes~ : Int) -> Self raise ModelError
+pub fn RecoveryDrill::finish(Self, actor~ : String, timestamp_minutes~ : Int) -> Self raise ModelError
+pub fn RecoveryDrill::new(id~ : String, playbook~ : RecoveryPlaybook) -> Self raise ModelError
+pub fn RecoveryDrill::start(Self, actor~ : String, timestamp_minutes~ : Int) -> Self raise ModelError
 
 pub(all) struct RecoveryItem {
   asset : AssetRef

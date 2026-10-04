@@ -16,6 +16,8 @@ pub(all) suberror ModelError {
   StepNotFound(String)
   StepBlocked(String)
   InvalidStepTransition(String)
+  DrillValidation(String)
+  InvalidDrillTransition(String)
 }
 
 ///|
