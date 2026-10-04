@@ -18,6 +18,9 @@ pub(all) suberror ModelError {
   InvalidStepTransition(String)
   DrillValidation(String)
   InvalidDrillTransition(String)
+  StorageValidation(String)
+  ProjectNotFound(String)
+  DuplicateAuditRecord(String)
 }
 
 ///|

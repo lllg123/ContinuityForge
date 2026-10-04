@@ -57,6 +57,9 @@ pub(all) suberror ModelError {
   InvalidStepTransition(String)
   DrillValidation(String)
   InvalidDrillTransition(String)
+  StorageValidation(String)
+  ProjectNotFound(String)
+  DuplicateAuditRecord(String)
 }
 
 // Types and methods
@@ -82,6 +85,13 @@ pub(all) struct AuditEvent {
 }
 pub fn AuditEvent::new(sequence~ : Int, timestamp_minutes~ : Int, actor~ : String, action~ : AuditAction, step_id~ : String?) -> Self raise ModelError
 
+pub(all) struct AuditRecord {
+  id : String
+  project_id : String
+  event : AuditEvent
+}
+pub fn AuditRecord::new(id~ : String, project_id~ : String, event~ : AuditEvent) -> Self raise ModelError
+
 pub(all) struct BusinessImpactAssessment {
   service_id : ServiceId
   impact_score : Int
@@ -103,6 +113,17 @@ pub(all) struct ComponentId {
   value : String
 }
 pub fn ComponentId::new(value~ : String) -> Self raise ModelError
+
+pub(all) struct ContinuityStorage {
+  projects : Array[Project]
+  audits : Array[AuditRecord]
+}
+pub fn ContinuityStorage::append_audit(Self, record~ : AuditRecord) -> Self raise ModelError
+pub fn ContinuityStorage::audit_timeline(Self, project_id~ : String) -> Array[AuditRecord] raise ModelError
+pub fn ContinuityStorage::get_project(Self, project_id~ : String) -> Project?
+pub fn ContinuityStorage::list_projects(Self) -> Array[Project]
+pub fn ContinuityStorage::new() -> Self
+pub fn ContinuityStorage::save_project(Self, project~ : Project) -> Self raise ModelError
 
 pub(all) struct Dependency {
   dependent : AssetRef
@@ -143,6 +164,13 @@ pub(all) enum PlaybookStatus {
   Active
   Completed
 }
+
+pub(all) struct Project {
+  id : String
+  name : String
+  owner : String
+}
+pub fn Project::new(id~ : String, name~ : String, owner~ : String) -> Self raise ModelError
 
 pub(all) struct RecoveryConstraints {
   target_window : TimeSpan
