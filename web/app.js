@@ -447,6 +447,113 @@ function renderDrill() {
   button.innerHTML = complete ? "✓ Drill complete" : "<span>＋</span> Record next event"
 }
 
+function buildEvidenceReport() {
+  const serviceCount = state.assets.filter((asset) => asset.type === "Service").length
+  const assessedServices = state.bia.filter(
+    (record) => assetById(record.serviceId)?.type === "Service",
+  ).length
+  const recovery = recoveryQueue()
+  const drillEvents = state.drill?.events ?? []
+  const releaseChecks = [
+    {
+      id: "inventory",
+      label: "Inventory captured",
+      passed: state.assets.length > 0,
+    },
+    {
+      id: "bia",
+      label: "BIA coverage complete",
+      passed: serviceCount > 0 && assessedServices === serviceCount,
+    },
+    {
+      id: "dependencies",
+      label: "Dependency edges are mapped",
+      passed: state.assets.every((asset) => Array.isArray(asset.dependsOn)),
+    },
+    {
+      id: "drill",
+      label: "Drill evidence captured",
+      passed: drillEvents.length > 0,
+    },
+  ]
+  return {
+    schemaVersion: "1.0",
+    product: "ContinuityForge",
+    generatedAt: new Date().toISOString(),
+    summary: {
+      assetCount: state.assets.length,
+      serviceCount,
+      biaCoverage: serviceCount ? Math.round((assessedServices / serviceCount) * 100) : 0,
+      dependencyCount: state.assets.reduce(
+        (total, asset) => total + (asset.dependsOn?.length ?? 0),
+        0,
+      ),
+      recoveryTotalMinutes: recovery.assets.reduce(
+        (total, asset) => total + recoveryEstimate(asset),
+        0,
+      ),
+      drillEventCount: drillEvents.length,
+    },
+    inventory: state.assets.map((asset) => ({ ...asset })),
+    businessImpact: state.bia.map((record) => ({ ...record })),
+    incidentImpact: state.assets.map((asset) => {
+      const impacts = dependentImpact(asset.id)
+      return {
+        failedAsset: asset.id,
+        affectedAssets: impacts.map((item) => item.asset.id),
+        longestPath: impacts.reduce((max, item) => Math.max(max, item.depth), 0),
+        highestExposure:
+          impacts.reduce(
+            (level, item) =>
+              impactRank(assetImpactLevel(item.asset)) > impactRank(level)
+                ? assetImpactLevel(item.asset)
+                : level,
+            "",
+          ) || null,
+      }
+    }),
+    recoveryPlan: {
+      hasDependencyCycle: recovery.hasCycle,
+      orderedAssets: recovery.assets.map((asset, index) => ({
+        order: index + 1,
+        assetId: asset.id,
+        estimateMinutes: recoveryEstimate(asset),
+        owner: asset.owner,
+        priority: assetImpactLevel(asset),
+      })),
+    },
+    drill: {
+      status: state.drill?.status ?? "In progress",
+      timeline: drillEvents.map((event) => ({ ...event })),
+    },
+    releaseChecks: {
+      ready: releaseChecks.every((check) => check.passed),
+      checks: releaseChecks,
+    },
+  }
+}
+
+function exportEvidenceReport() {
+  if (typeof Blob === "undefined" || typeof URL?.createObjectURL !== "function") {
+    showToast("Evidence export is unavailable in this browser.", "error")
+    return
+  }
+  const report = buildEvidenceReport()
+  const blob = new Blob([JSON.stringify(report, null, 2)], {
+    type: "application/json",
+  })
+  const link = document.createElement("a")
+  const date = new Date().toISOString().slice(0, 10)
+  const objectUrl = URL.createObjectURL(blob)
+  link.href = objectUrl
+  link.download = "continuityforge-evidence-" + date + ".json"
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(objectUrl)
+  showToast("Evidence report downloaded")
+}
+
 function renderMetrics() {
   const critical = state.assets.filter(
     (asset) => asset.criticality === "Critical",
@@ -728,6 +835,8 @@ document.querySelector("#primary-action").addEventListener("click", () => {
     recordNextDrillEvent()
   }
 })
+
+document.querySelector("#export-report").addEventListener("click", exportEvidenceReport)
 
 document.querySelector("#inventory-search").addEventListener("input", renderInventory)
 document.querySelector("#clear-search").addEventListener("click", () => {

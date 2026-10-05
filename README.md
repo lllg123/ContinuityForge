@@ -6,7 +6,7 @@ ContinuityForge 是一个面向组织内部的系统韧性与业务连续性平�
 
 ## 当前阶段
 
-当前仓库已建立 MoonBit 模块、JavaScript 目标验证入口、经过统一 API façade 校验的依赖图、业务影响分析（BIA）、故障影响传播、约束下恢复排序、恢复预案、演练审计时间线、项目与审计记录存储、本地用户权限，以及包含故障影响、恢复排序和演练时间线可视化的 Web 工作区。服务端接口和更完整的 Web 流程会在后续独立提交中逐步加入。
+当前仓库已建立 MoonBit 模块、JavaScript 目标验证入口、经过统一 API façade 校验的依赖图、业务影响分析（BIA）、故障影响传播、约束下恢复排序、恢复预案、演练审计时间线、项目与审计记录存储、本地用户权限，以及包含故障影响、恢复排序、演练时间线可视化和证据 JSON 导出的 Web 工作区。服务端接口和更完整的 Web 流程会在后续独立提交中逐步加入。
 
 ## 产品边界
 
@@ -38,7 +38,7 @@ ContinuityForge/
 ├── web/
 │   ├── index.html # 库存、BIA、故障、恢复与演练工作区页面
 │   ├── styles.css # 工作区视觉样式
-│   └── app.js     # 本地交互、模拟计算与浏览器存储
+│   └── app.js     # 本地交互、模拟计算、证据导出与浏览器存储
 ├── server/     # API、权限、持久化和输入校验
 ├── docs/       # 架构、运行和操作文档
 ├── examples/   # 脱敏的演示数据
@@ -69,7 +69,21 @@ node integration/js/smoke.mjs
 
 最后一条命令会启动 MoonBit 的 JavaScript 目标探针，并检查核心包返回的稳定标记。
 
-web/ 是独立的静态工作区，可交给任意静态服务器预览；库存、BIA 和演练事件会保存到当前浏览器。
+web/ 是独立的静态工作区，可交给任意静态服务器预览；库存、BIA 和演练事件会保存到当前浏览器，Export evidence 会下载当前工作区的证据 JSON。
+
+## 发布检查
+
+发布前运行以下检查，确保 MoonBit 核心、JavaScript 集成和静态工作区都可复核：
+
+```text
+moon fmt
+moon check --target all --deny-warn
+moon test --target all
+moon build --target all --deny-warn
+node integration/js/smoke.mjs
+node --check web/app.js
+git diff --check
+```
 
 ## 许可证
 
