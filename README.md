@@ -40,12 +40,14 @@ ContinuityForge/
 │   ├── styles.css # 工作区视觉样式
 │   └── app.js     # 本地交互、模拟计算、证据导出与浏览器存储
 ├── server/     # API、权限、持久化和输入校验
-├── docs/       # 架构、运行和操作文档
-├── examples/   # 脱敏的演示数据
+├── docs/
+│   └── operations.md # 安装、运行、操作和发布检查
+├── examples/
+│   └── minimal/      # 可运行的领域闭环示例与脱敏输入
 └── integration/ # 跨语言构建与集成验证
 ```
 
-目录会在对应功能提交中创建；当前 web 已提供静态工作区，server、docs 和 examples 仍按功能提交逐步加入。
+当前 web、docs 和 examples 已提供最小可复核闭环，server 仍保留为后续服务端实现边界。
 
 ## 开发原则
 
@@ -55,6 +57,48 @@ ContinuityForge/
 4. 配置、示例和提交历史中不得出现密码、令牌或其他敏感凭据。
 
 每次功能提交都应保持范围清晰，并在提交信息中说明对应的验收结果。
+
+## 快速开始
+
+### 安装环境
+
+安装 MoonBit 0.10.7 或更新版本、Node.js 20 或更新版本；如需预览 Web 工作区，再安装 Python 3。确认核心工具链：
+
+```text
+moon version --all
+node --version
+```
+
+预览 Web 前再确认：
+
+```text
+python --version
+```
+
+MoonBit 可从[官方安装页面](https://www.moonbitlang.com/download/)获取。克隆仓库后进入项目目录：
+
+```text
+git clone https://github.com/lllg123/ContinuityForge.git
+cd ContinuityForge
+```
+
+### 运行领域最小示例
+
+`cmd/js_probe` 只验证 MoonBit 到 JavaScript 的集成边界；面向使用者的领域闭环示例位于 `examples/minimal`。运行：
+
+```text
+moon run examples/minimal
+```
+
+示例会完成服务与组件登记、依赖校验、BIA、故障影响传播、恢复排序、人工审批和演练时间线，并打印每一步的确定性结果。对应的脱敏输入快照见 [examples/minimal/sample-data.json](examples/minimal/sample-data.json)。
+
+### 运行 Web 工作区
+
+```text
+python -m http.server 8765 --directory web
+```
+
+打开 `http://127.0.0.1:8765/`，依次使用 Inventory、Business impact、Incident impact、Recovery plans 和 Drill log；最后点击 **Export evidence** 下载证据 JSON。完整操作说明见 [docs/operations.md](docs/operations.md)。
 
 ## 本地验证
 
@@ -82,6 +126,7 @@ moon fmt
 moon check --target all --deny-warn
 moon test --target all
 moon build --target all --deny-warn
+moon run examples/minimal
 node integration/js/smoke.mjs
 node --check web/app.js
 git diff --check

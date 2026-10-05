@@ -1,0 +1,45 @@
+{
+  "project": {
+    "id": "commerce-continuity",
+    "name": "Commerce continuity",
+    "owner": "Continuity operator"
+  },
+  "assets": [
+    {
+      "id": "checkout-api",
+      "type": "service",
+      "owner": "Commerce platform",
+      "criticality": "High",
+      "dependsOn": ["postgres-primary"]
+    },
+    {
+      "id": "postgres-primary",
+      "type": "component",
+      "owner": "Data platform",
+      "criticality": "Critical",
+      "dependsOn": []
+    }
+  ],
+  "bia": [
+    {
+      "serviceId": "checkout-api",
+      "impactScore": 85,
+      "rtoMinutes": 30,
+      "rpoMinutes": 15,
+      "maxDowntimeMinutes": 120
+    }
+  ],
+  "incident": {
+    "failedAsset": "postgres-primary",
+    "expectedAffectedAssets": ["checkout-api"]
+  },
+  "recovery": {
+    "targetWindowMinutes": 60,
+    "resources": ["database-team", "platform-team"],
+    "expectedOrder": ["postgres-primary", "checkout-api"]
+  },
+  "drill": {
+    "id": "checkout-drill",
+    "expectedStatus": "Completed"
+  }
+}
