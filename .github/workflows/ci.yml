@@ -1,0 +1,61 @@
+name: ContinuityForge CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate MoonBit and JavaScript integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install MoonBit
+        shell: bash
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Show toolchain
+        run: moon version --all
+
+      - name: Check formatting
+        run: moon fmt --check
+
+      - name: Check all targets
+        run: moon check --target all --deny-warn
+
+      - name: Verify generated interfaces
+        run: |
+          moon info
+          git diff --exit-code
+
+      - name: Test all targets
+        run: moon test --target all
+
+      - name: Build all targets
+        run: moon build --target all --deny-warn
+
+      - name: Run JavaScript integration probe
+        run: node integration/js/smoke.mjs
+
+      - name: Check Web JavaScript syntax
+        run: node --check web/app.js

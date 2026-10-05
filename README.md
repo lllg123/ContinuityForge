@@ -75,6 +75,8 @@ web/ 是独立的静态工作区，可交给任意静态服务器预览；库存
 
 发布前运行以下检查，确保 MoonBit 核心、JavaScript 集成和静态工作区都可复核：
 
+GitHub Actions 中的 `ContinuityForge CI` 会在 `main` 的推送和 Pull Request 上自动运行同一组门禁。
+
 ```text
 moon fmt
 moon check --target all --deny-warn
