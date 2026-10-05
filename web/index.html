@@ -42,15 +42,20 @@
             <span>Business impact</span>
             <span class="nav-count" id="nav-bia-count">2</span>
           </button>
-          <button class="nav-item disabled" type="button" disabled>
+          <button class="nav-item" type="button" data-view-target="incident">
+            <span class="nav-icon">⌁</span>
+            <span>Incident impact</span>
+            <span class="nav-count" id="nav-incident-count">1</span>
+          </button>
+          <button class="nav-item" type="button" data-view-target="recovery">
             <span class="nav-icon">↗</span>
             <span>Recovery plans</span>
-            <span class="soon-label">SOON</span>
+            <span class="nav-count" id="nav-recovery-count">3</span>
           </button>
-          <button class="nav-item disabled" type="button" disabled>
+          <button class="nav-item" type="button" data-view-target="drills">
             <span class="nav-icon">◎</span>
             <span>Drill log</span>
-            <span class="soon-label">SOON</span>
+            <span class="nav-count" id="nav-drill-count">5</span>
           </button>
         </nav>
 
@@ -273,6 +278,176 @@
                 <div class="form-hint"><span>i</span> RTO and RPO must stay within the maximum tolerable downtime.</div>
                 <button class="button button-primary full-width" type="submit">Save BIA assessment</button>
               </form>
+            </aside>
+          </div>
+        </section>
+        <section class="workspace-view" id="incident-view" data-view="incident">
+          <div class="section-toolbar">
+            <div>
+              <h2>Incident impact</h2>
+              <p>Trace how a failed asset moves through the dependency graph.</p>
+            </div>
+            <button class="button button-primary" id="simulate-incident" type="button"><span>⌁</span> Simulate impact</button>
+          </div>
+
+          <div class="content-grid incident-grid">
+            <section class="panel table-panel">
+              <div class="panel-header">
+                <div>
+                  <span class="eyebrow">INCIDENT SCENARIO</span>
+                  <h3>Failure propagation</h3>
+                </div>
+                <label class="scenario-select">
+                  <span>Failed asset</span>
+                  <select id="incident-asset"></select>
+                </label>
+              </div>
+              <div class="impact-summary">
+                <div><span class="summary-label">Affected assets</span><strong id="impact-affected-count">0</strong></div>
+                <div><span class="summary-label">Longest path</span><strong id="impact-depth">0 hops</strong></div>
+                <div><span class="summary-label">Highest exposure</span><strong id="impact-highest">—</strong></div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Affected asset</th>
+                      <th>Impact level</th>
+                      <th>Propagation path</th>
+                      <th>Owner</th>
+                    </tr>
+                  </thead>
+                  <tbody id="impact-table"></tbody>
+                </table>
+              </div>
+              <div class="empty-state hidden" id="impact-empty">
+                <span class="empty-icon">✓</span>
+                <strong>No downstream impact</strong>
+                <p>This asset has no mapped dependents yet.</p>
+              </div>
+            </section>
+
+            <aside class="panel path-panel">
+              <div class="panel-header compact">
+                <div>
+                  <span class="eyebrow">PROPAGATION MAP</span>
+                  <h3>Dependency chain</h3>
+                </div>
+                <span class="signal-icon">⌁</span>
+              </div>
+              <div class="impact-chain" id="impact-chain"></div>
+              <p class="path-copy" id="incident-explanation">Select a failed asset to see how the graph responds.</p>
+              <div class="divider"></div>
+              <div class="legend-row"><span class="legend-swatch red"></span><span>Failed asset</span></div>
+              <div class="legend-row"><span class="legend-swatch amber"></span><span>Downstream exposure</span></div>
+              <div class="legend-row"><span class="legend-swatch green"></span><span>Unaffected branch</span></div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="workspace-view" id="recovery-view" data-view="recovery">
+          <div class="section-toolbar">
+            <div>
+              <h2>Recovery plan</h2>
+              <p>Prioritize the next action while respecting dependencies and the recovery window.</p>
+            </div>
+            <button class="button button-primary" id="recalculate-recovery" type="button"><span>↻</span> Recalculate</button>
+          </div>
+
+          <div class="content-grid recovery-grid">
+            <section class="panel table-panel">
+              <div class="panel-header">
+                <div>
+                  <span class="eyebrow">RECOVERY QUEUE</span>
+                  <h3>Dependency-aware order</h3>
+                </div>
+                <span class="table-note" id="recovery-total">0 min total</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Order</th>
+                      <th>Asset</th>
+                      <th>Priority</th>
+                      <th>Estimate</th>
+                      <th>Owner</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recovery-table"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <aside class="panel constraint-panel">
+              <div class="panel-header compact">
+                <div>
+                  <span class="eyebrow">RECOVERY CONSTRAINTS</span>
+                  <h3>Window &amp; capacity</h3>
+                </div>
+                <span class="signal-icon">↗</span>
+              </div>
+              <div class="constraint-stat"><span>Target window</span><strong>180m</strong></div>
+              <div class="constraint-stat"><span>Projected total</span><strong id="recovery-window">0m</strong></div>
+              <div class="progress-track constraint-progress"><span id="recovery-progress"></span></div>
+              <div class="signal-meta"><span>Window utilization</span><strong id="recovery-utilization">0%</strong></div>
+              <div class="divider"></div>
+              <span class="eyebrow constraint-eyebrow">AVAILABLE RESOURCES</span>
+              <div class="resource-list">
+                <span><i class="status-dot green"></i> database-team</span>
+                <span><i class="status-dot green"></i> platform-team</span>
+                <span><i class="status-dot amber"></i> payments-team</span>
+              </div>
+              <p class="path-copy">The queue is recalculated from current BIA scores and dependency edges.</p>
+            </aside>
+          </div>
+        </section>
+
+        <section class="workspace-view" id="drills-view" data-view="drills">
+          <div class="section-toolbar">
+            <div>
+              <h2>Drill log</h2>
+              <p>Keep a reviewable record of what the team rehearsed and when.</p>
+            </div>
+            <button class="button button-primary" id="record-drill-event" type="button"><span>＋</span> Record next event</button>
+          </div>
+
+          <div class="content-grid drill-grid">
+            <section class="panel timeline-panel">
+              <div class="panel-header">
+                <div>
+                  <span class="eyebrow">AUDIT TIMELINE</span>
+                  <h3>Checkout recovery rehearsal</h3>
+                </div>
+                <span class="view-tag" id="drill-status"><span class="status-dot amber"></span>In progress</span>
+              </div>
+              <div class="timeline" id="drill-timeline"></div>
+              <div class="empty-state hidden" id="drill-empty">
+                <span class="empty-icon">◎</span>
+                <strong>No drill events yet</strong>
+                <p>Record the first event to start the rehearsal timeline.</p>
+              </div>
+            </section>
+
+            <aside class="panel rehearsal-panel">
+              <div class="panel-header compact">
+                <div>
+                  <span class="eyebrow">REHEARSAL HEALTH</span>
+                  <h3>Evidence captured</h3>
+                </div>
+                <span class="signal-icon">◎</span>
+              </div>
+              <div class="rehearsal-score"><strong id="drill-progress-score">5</strong><span>/ 7 events</span></div>
+              <p class="signal-copy">A complete timeline makes the next review concrete: owner, action, approval, and outcome.</p>
+              <div class="progress-track"><span id="drill-progress"></span></div>
+              <div class="signal-meta"><span>Timeline coverage</span><strong id="drill-progress-label">71%</strong></div>
+              <div class="divider"></div>
+              <div class="mini-list">
+                <div><span class="status-dot green"></span><span>Steps recorded</span><strong id="drill-step-count">2/3</strong></div>
+                <div><span class="status-dot amber"></span><span>Approvals</span><strong id="drill-approval-count">1</strong></div>
+                <div><span class="status-dot blue"></span><span>Last actor</span><strong id="drill-last-actor">operator</strong></div>
+              </div>
             </aside>
           </div>
         </section>

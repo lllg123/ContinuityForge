@@ -43,6 +43,46 @@ const DEFAULT_STATE = {
       downtime: 240,
     },
   ],
+  drill: {
+    status: "In progress",
+    events: [
+      {
+        time: "09:00",
+        actor: "Continuity operator",
+        action: "Drill started",
+        detail: "checkout-recovery",
+        kind: "start",
+      },
+      {
+        time: "09:04",
+        actor: "Database team",
+        action: "Step started",
+        detail: "restore-db",
+        kind: "step",
+      },
+      {
+        time: "09:07",
+        actor: "Resilience approver",
+        action: "Approval recorded",
+        detail: "restore-db approved",
+        kind: "approval",
+      },
+      {
+        time: "09:18",
+        actor: "Database team",
+        action: "Step completed",
+        detail: "restore-db",
+        kind: "complete",
+      },
+      {
+        time: "09:22",
+        actor: "Platform team",
+        action: "Step started",
+        detail: "restore-api",
+        kind: "step",
+      },
+    ],
+  },
 }
 
 const copyDefaultState = () => ({
@@ -51,6 +91,10 @@ const copyDefaultState = () => ({
     dependsOn: [...asset.dependsOn],
   })),
   bia: DEFAULT_STATE.bia.map((record) => ({ ...record })),
+  drill: {
+    status: DEFAULT_STATE.drill.status,
+    events: DEFAULT_STATE.drill.events.map((event) => ({ ...event })),
+  },
 })
 
 let state = loadState()
@@ -64,7 +108,18 @@ function loadState() {
     if (!Array.isArray(parsed.assets) || !Array.isArray(parsed.bia)) {
       return copyDefaultState()
     }
-    return parsed
+    const fallback = copyDefaultState()
+    return {
+      ...fallback,
+      ...parsed,
+      drill: {
+        ...fallback.drill,
+        ...(parsed.drill ?? {}),
+        events: Array.isArray(parsed.drill?.events)
+          ? parsed.drill.events
+          : fallback.drill.events,
+      },
+    }
   } catch {
     return copyDefaultState()
   }
@@ -119,6 +174,279 @@ function assetById(id) {
   return state.assets.find((asset) => asset.id === id)
 }
 
+function impactRank(value) {
+  return { Critical: 4, High: 3, Medium: 2, Low: 1 }[value] ?? 0
+}
+
+function dependentImpact(failedId) {
+  const impacts = []
+  const queue = [{ id: failedId, path: [failedId] }]
+  const visited = new Set([failedId])
+  while (queue.length) {
+    const current = queue.shift()
+    state.assets.forEach((asset) => {
+      if (!visited.has(asset.id) && (asset.dependsOn ?? []).includes(current.id)) {
+        visited.add(asset.id)
+        const path = current.path.concat(asset.id)
+        impacts.push({ asset, path, depth: path.length - 1 })
+        queue.push({ id: asset.id, path })
+      }
+    })
+  }
+  return impacts
+}
+
+function assetImpactLevel(asset) {
+  return asset.criticality || "Medium"
+}
+
+function renderIncident() {
+  const select = document.querySelector("#incident-asset")
+  const current = select.value
+  select.innerHTML = state.assets
+    .map(
+      (asset) =>
+        '<option value="' +
+        escapeHtml(asset.id) +
+        '">' +
+        escapeHtml(asset.name) +
+        " · " +
+        escapeHtml(asset.criticality) +
+        "</option>",
+    )
+    .join("")
+  if (assetById(current)) select.value = current
+  if (!select.value && select.options.length) select.selectedIndex = 0
+
+  const failed = assetById(select.value)
+  const impacts = failed ? dependentImpact(failed.id) : []
+  const maxDepth = impacts.reduce((max, item) => Math.max(max, item.depth), 0)
+  const highest = impacts.reduce(
+    (currentLevel, item) =>
+      impactRank(assetImpactLevel(item.asset)) > impactRank(currentLevel)
+        ? assetImpactLevel(item.asset)
+        : currentLevel,
+    "",
+  )
+
+  document.querySelector("#impact-affected-count").textContent = impacts.length
+  document.querySelector("#impact-depth").textContent = maxDepth + " hops"
+  document.querySelector("#impact-highest").textContent = highest || "—"
+  document.querySelector("#nav-incident-count").textContent = impacts.length
+
+  document.querySelector("#impact-table").innerHTML = impacts
+    .map((item) => {
+      const level = assetImpactLevel(item.asset)
+      const path = item.path.map((id) => assetById(id)?.name ?? id).join(" → ")
+      return (
+        "<tr>" +
+        '<td><div class="asset-cell"><span class="asset-icon component">↳</span>' +
+        "<span><strong>" +
+        escapeHtml(item.asset.name) +
+        "</strong><small>" +
+        escapeHtml(item.asset.id) +
+        "</small></span></div></td>" +
+        '<td><span class="criticality-pill ' +
+        criticalityClass(level) +
+        '"><span class="status-dot ' +
+        (level === "Critical" ? "red" : level === "High" ? "amber" : "blue") +
+        '"></span>' +
+        escapeHtml(level) +
+        "</span></td>" +
+        '<td class="path-cell">' +
+        escapeHtml(path) +
+        "</td><td>" +
+        escapeHtml(item.asset.owner) +
+        "</td></tr>"
+      )
+    })
+    .join("")
+  document.querySelector("#impact-empty").classList.toggle("hidden", impacts.length > 0)
+
+  const chain = failed
+    ? [
+        '<div class="chain-node failed"><span class="chain-node-dot"></span><span><strong>' +
+          escapeHtml(failed.name) +
+          '</strong><small>Failed asset · ' +
+          escapeHtml(failed.owner) +
+          "</small></span></div>",
+      ]
+        .concat(
+          impacts.map(
+            (item) =>
+              '<div class="chain-arrow">↓ <span>' +
+              item.depth +
+              " hop" +
+              (item.depth === 1 ? "" : "s") +
+              '</span></div><div class="chain-node exposed"><span class="chain-node-dot"></span><span><strong>' +
+              escapeHtml(item.asset.name) +
+              '</strong><small>Downstream exposure · ' +
+              escapeHtml(item.asset.owner) +
+              "</small></span></div>",
+          ),
+        )
+        .join("")
+    : ""
+  document.querySelector("#impact-chain").innerHTML = chain
+  document.querySelector("#incident-explanation").textContent = failed
+    ? "Failure of " +
+      failed.name +
+      " reaches " +
+      impacts.length +
+      " downstream " +
+      (impacts.length === 1 ? "asset" : "assets") +
+      " through " +
+      maxDepth +
+      " dependency " +
+      (maxDepth === 1 ? "hop" : "hops") +
+      "."
+    : "Select a failed asset to see how the graph responds."
+}
+
+function biaFor(assetId) {
+  return state.bia.find((record) => record.serviceId === assetId)
+}
+
+function recoveryQueue() {
+  const pending = [...state.assets]
+  const ordered = []
+  let hasCycle = false
+  while (pending.length) {
+    let ready = pending.filter((asset) =>
+      (asset.dependsOn ?? []).every(
+        (dependency) =>
+          ordered.some((item) => item.id === dependency) || !assetById(dependency),
+      ),
+    )
+    if (!ready.length) {
+      hasCycle = true
+      ready = [...pending]
+    }
+    ready.sort((left, right) => {
+      const scoreDiff = (biaFor(right.id)?.score ?? 0) - (biaFor(left.id)?.score ?? 0)
+      if (scoreDiff) return scoreDiff
+      const criticalityDiff =
+        impactRank(right.criticality) - impactRank(left.criticality)
+      return criticalityDiff || left.id.localeCompare(right.id)
+    })
+    const next = ready[0]
+    pending.splice(pending.indexOf(next), 1)
+    ordered.push(next)
+  }
+  return { assets: ordered, hasCycle }
+}
+
+function recoveryEstimate(asset) {
+  return Math.max(15, Math.round((biaFor(asset.id)?.rto ?? 30) / 2))
+}
+
+function renderRecovery() {
+  const queue = recoveryQueue()
+  const total = queue.assets.reduce((sum, asset) => sum + recoveryEstimate(asset), 0)
+  document.querySelector("#nav-recovery-count").textContent = queue.assets.length
+  document.querySelector("#recovery-total").textContent = total + " min total"
+  document.querySelector("#recovery-window").textContent = total + "m"
+  const utilization = Math.round((total / 180) * 100)
+  document.querySelector("#recovery-progress").style.width = Math.min(100, utilization) + "%"
+  document.querySelector("#recovery-utilization").textContent = utilization + "%"
+  document.querySelector("#recovery-table").innerHTML = queue.assets
+    .map((asset, index) => {
+      const level = assetImpactLevel(asset)
+      const status = queue.hasCycle ? "Review dependency" : index === 0 ? "Next" : "Queued"
+      const statusClass = queue.hasCycle ? "review" : index === 0 ? "ready" : "queued"
+      return (
+        "<tr>" +
+        '<td><span class="order-number">' +
+        String(index + 1).padStart(2, "0") +
+        "</span></td>" +
+        '<td><div class="asset-cell"><span class="asset-icon ' +
+        (asset.type === "Component" ? "component" : "") +
+        '">✦</span><span><strong>' +
+        escapeHtml(asset.name) +
+        "</strong><small>" +
+        escapeHtml(asset.type) +
+        "</small></span></div></td>" +
+        '<td><span class="priority-label ' +
+        criticalityClass(level) +
+        '"><span class="status-dot ' +
+        (level === "Critical" ? "red" : level === "High" ? "amber" : "blue") +
+        '"></span>' +
+        escapeHtml(level) +
+        "</span></td><td>" +
+        recoveryEstimate(asset) +
+        "m</td><td>" +
+        escapeHtml(asset.owner) +
+        '</td><td><span class="status-pill ' +
+        statusClass +
+        '">' +
+        escapeHtml(status) +
+        "</span></td></tr>"
+      )
+    })
+    .join("")
+}
+
+const DRILL_NEXT_EVENTS = [
+  {
+    time: "09:31",
+    actor: "Platform team",
+    action: "Step completed",
+    detail: "restore-api",
+    kind: "complete",
+  },
+  {
+    time: "09:35",
+    actor: "Continuity operator",
+    action: "Drill finished",
+    detail: "All planned steps succeeded",
+    kind: "finish",
+  },
+]
+
+function renderDrill() {
+  const events = state.drill?.events ?? []
+  const totalEvents = DEFAULT_STATE.drill.events.length + DRILL_NEXT_EVENTS.length
+  const coverage = Math.round((events.length / totalEvents) * 100)
+  const completedSteps = events.filter((event) => event.kind === "complete").length
+  const approvals = events.filter((event) => event.kind === "approval").length
+  const lastActor = events.length ? events[events.length - 1].actor : "—"
+  document.querySelector("#nav-drill-count").textContent = events.length
+  document.querySelector("#drill-progress-score").textContent = events.length
+  document.querySelector("#drill-progress-label").textContent = coverage + "%"
+  document.querySelector("#drill-progress").style.width = coverage + "%"
+  document.querySelector("#drill-step-count").textContent = completedSteps + "/3"
+  document.querySelector("#drill-approval-count").textContent = approvals
+  document.querySelector("#drill-last-actor").textContent = lastActor
+  document.querySelector("#drill-status").innerHTML =
+    '<span class="status-dot ' +
+    (state.drill?.status === "Completed" ? "green" : "amber") +
+    '"></span>' +
+    escapeHtml(state.drill?.status ?? "In progress")
+  document.querySelector("#drill-timeline").innerHTML = events
+    .map(
+      (event) =>
+        '<div class="timeline-item ' +
+        escapeHtml(event.kind) +
+        '"><span class="timeline-marker">' +
+        (event.kind === "approval" ? "✓" : event.kind === "complete" ? "●" : "·") +
+        '</span><div class="timeline-content"><time>' +
+        escapeHtml(event.time) +
+        '</time><strong>' +
+        escapeHtml(event.action) +
+        '</strong><p>' +
+        escapeHtml(event.detail) +
+        " · " +
+        escapeHtml(event.actor) +
+        "</p></div></div>",
+    )
+    .join("")
+  document.querySelector("#drill-empty").classList.toggle("hidden", events.length > 0)
+  const button = document.querySelector("#record-drill-event")
+  const complete = events.length >= totalEvents
+  button.disabled = complete
+  button.innerHTML = complete ? "✓ Drill complete" : "<span>＋</span> Record next event"
+}
+
 function renderMetrics() {
   const critical = state.assets.filter(
     (asset) => asset.criticality === "Critical",
@@ -142,6 +470,8 @@ function renderMetrics() {
   document.querySelector("#metric-coverage").textContent = coverage + "%"
   document.querySelector("#nav-asset-count").textContent = state.assets.length
   document.querySelector("#nav-bia-count").textContent = state.bia.length
+  document.querySelector("#nav-recovery-count").textContent = state.assets.length
+  document.querySelector("#nav-drill-count").textContent = state.drill?.events?.length ?? 0
   document.querySelector("#owner-count").textContent =
     ownerCount + "/" + state.assets.length
   document.querySelector("#bia-count").textContent =
@@ -296,6 +626,9 @@ function renderAll() {
   renderMetrics()
   renderInventory()
   renderBia()
+  renderIncident()
+  renderRecovery()
+  renderDrill()
 }
 
 function showToast(message, tone = "success") {
@@ -314,22 +647,50 @@ function switchView(view) {
   document.querySelectorAll(".workspace-view").forEach((section) => {
     section.classList.toggle("active", section.dataset.view === view)
   })
-  const inventory = view === "inventory"
-  document.querySelector("#breadcrumb-current").textContent = inventory
-    ? "Inventory"
-    : "Business impact"
-  document.querySelector("#page-kicker").textContent = inventory
-    ? "SYSTEM INVENTORY"
-    : "BUSINESS IMPACT ANALYSIS"
-  document.querySelector("#page-title").textContent = inventory
-    ? "Know what keeps the business running."
-    : "Make recovery targets explicit."
-  document.querySelector("#page-description").textContent = inventory
-    ? "Keep services, components, ownership, and dependencies ready for the next continuity decision."
-    : "Translate service criticality into recovery targets your team can act on."
-  document.querySelector("#primary-action").innerHTML = inventory
-    ? "<span>＋</span> Add asset"
-    : "<span>＋</span> Assess service"
+  const metadata = {
+    inventory: {
+      breadcrumb: "Inventory",
+      kicker: "SYSTEM INVENTORY",
+      title: "Know what keeps the business running.",
+      description:
+        "Keep services, components, ownership, and dependencies ready for the next continuity decision.",
+      action: "<span>＋</span> Add asset",
+    },
+    bia: {
+      breadcrumb: "Business impact",
+      kicker: "BUSINESS IMPACT ANALYSIS",
+      title: "Make recovery targets explicit.",
+      description: "Translate service criticality into recovery targets your team can act on.",
+      action: "<span>＋</span> Assess service",
+    },
+    incident: {
+      breadcrumb: "Incident impact",
+      kicker: "INCIDENT IMPACT",
+      title: "See where a failure travels.",
+      description: "Trace downstream exposure before the incident reaches the next team.",
+      action: "<span>⌁</span> Simulate impact",
+    },
+    recovery: {
+      breadcrumb: "Recovery plans",
+      kicker: "RECOVERY PLANNING",
+      title: "Put the next recovery action first.",
+      description: "Use BIA scores and dependency order to keep the recovery window visible.",
+      action: "<span>↻</span> Recalculate",
+    },
+    drills: {
+      breadcrumb: "Drill log",
+      kicker: "DRILL EVIDENCE",
+      title: "Turn rehearsals into evidence.",
+      description: "Keep each action, approval, and outcome ready for the next review.",
+      action: "<span>＋</span> Record event",
+    },
+  }
+  const current = metadata[view] ?? metadata.inventory
+  document.querySelector("#breadcrumb-current").textContent = current.breadcrumb
+  document.querySelector("#page-kicker").textContent = current.kicker
+  document.querySelector("#page-title").textContent = current.title
+  document.querySelector("#page-description").textContent = current.description
+  document.querySelector("#primary-action").innerHTML = current.action
 }
 
 function openAssetModal() {
@@ -354,10 +715,17 @@ document.querySelectorAll("[data-view-target]").forEach((button) => {
 })
 
 document.querySelector("#primary-action").addEventListener("click", () => {
-  if (document.querySelector("#inventory-view").classList.contains("active")) {
-    openAssetModal()
-  } else {
-    document.querySelector("#bia-service").focus()
+  const activeView = document.querySelector(".workspace-view.active")?.dataset.view
+  if (activeView === "inventory") openAssetModal()
+  else if (activeView === "bia") document.querySelector("#bia-service").focus()
+  else if (activeView === "incident") {
+    renderIncident()
+    showToast("Impact simulation refreshed")
+  } else if (activeView === "recovery") {
+    renderRecovery()
+    showToast("Recovery order recalculated")
+  } else if (activeView === "drills") {
+    recordNextDrillEvent()
   }
 })
 
@@ -436,5 +804,31 @@ document.querySelector("#bia-form").addEventListener("submit", (event) => {
   renderAll()
   showToast("BIA assessment saved")
 })
+
+document.querySelector("#incident-asset").addEventListener("change", renderIncident)
+document.querySelector("#simulate-incident").addEventListener("click", () => {
+  renderIncident()
+  showToast("Impact simulation refreshed")
+})
+document.querySelector("#recalculate-recovery").addEventListener("click", () => {
+  renderRecovery()
+  showToast("Recovery order recalculated")
+})
+
+function recordNextDrillEvent() {
+  const index = (state.drill?.events?.length ?? 0) - DEFAULT_STATE.drill.events.length
+  const next = DRILL_NEXT_EVENTS[index]
+  if (!next) {
+    showToast("Drill timeline is complete", "error")
+    return
+  }
+  state.drill.events.push({ ...next })
+  if (next.kind === "finish") state.drill.status = "Completed"
+  persistState()
+  renderAll()
+  showToast("Drill event recorded")
+}
+
+document.querySelector("#record-drill-event").addEventListener("click", recordNextDrillEvent)
 
 renderAll()
