@@ -64,7 +64,7 @@ ContinuityForge/
 
 ### 安装环境
 
-安装 MoonBit 0.10.7 或更新版本、Node.js 20 或更新版本；如需预览 Web 工作区，再安装 Python 3。确认核心工具链：
+安装 MoonBit 0.10.7 或更新版本（格式与接口检查建议使用 CI 固定的编译器 0.10.14+7d59c7ec9）、Node.js 20 或更新版本；如需预览 Web 工作区，再安装 Python 3。确认核心工具链：
 
 ```text
 moon version --all
