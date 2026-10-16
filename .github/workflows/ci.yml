@@ -57,6 +57,9 @@ jobs:
       - name: Run minimal domain example
         run: moon run examples/minimal
 
+      - name: Run resource scheduling example
+        run: moon run examples/recovery_window
+
       - name: Run JavaScript integration probe
         run: node integration/js/smoke.mjs
 

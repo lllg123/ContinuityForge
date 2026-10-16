@@ -23,9 +23,12 @@ node --version
 ```text
 moon check --target all --deny-warn
 moon run examples/minimal
+moon run examples/recovery_window
 ```
 
 最小示例会依次登记服务和组件、校验依赖、创建 BIA、模拟数据库故障、生成恢复顺序、推进带审批点的恢复预案，并完成一次演练。`examples/minimal/sample-data.json` 是同一场景的脱敏输入快照，可作为 Web 录入或集成测试的参考数据。
+
+`examples/recovery_window` 打印每项任务的资源和起止分钟、依赖路径与资源负载下界，以及实际恢复窗口；计算规则见 [recovery-scheduling.md](recovery-scheduling.md)。
 
 ## Web 工作区
 

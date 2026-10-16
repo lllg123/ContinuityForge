@@ -183,7 +183,7 @@ test "recovery windows that cannot fit are rejected" {
       asset=database,
       impact_level=@continuity_forge.ImpactLevel::Medium,
       minutes=40,
-      resource="database",
+      resource="compute",
     ),
   ]
   try
@@ -196,10 +196,217 @@ test "recovery windows that cannot fit are rejected" {
     @continuity_forge.ModelError::RecoveryTargetUnmet(message) =>
       inspect(
         message,
-        content="recovery window exceeded at component:postgres-primary",
+        content="target 60m is below unavoidable lower bound 80m (dependency 40m, resource 80m)",
       )
     _ => fail("wrong error for recovery target")
   } noraise {
     _ => fail("expected an unmet recovery target")
   }
+}
+
+///|
+test "different teams overlap while one team queues its work" {
+  let database = try! recovery_component(value="postgres-primary")
+  let api = try! recovery_service(value="checkout-api")
+  let worker = try! recovery_service(value="checkout-worker")
+  let network = try! recovery_component(value="edge-router")
+  let plan = try! @continuity_forge.prioritize_recovery(
+    items=[
+      try! recovery_item(
+        asset=worker,
+        impact_level=@continuity_forge.ImpactLevel::Medium,
+        minutes=15,
+        resource="compute",
+      ),
+      try! recovery_item(
+        asset=network,
+        impact_level=@continuity_forge.ImpactLevel::Low,
+        minutes=25,
+        resource="network",
+      ),
+      try! recovery_item(
+        asset=api,
+        impact_level=@continuity_forge.ImpactLevel::High,
+        minutes=20,
+        resource="compute",
+      ),
+      try! recovery_item(
+        asset=database,
+        impact_level=@continuity_forge.ImpactLevel::Critical,
+        minutes=10,
+        resource="database",
+      ),
+    ],
+    dependencies=[try! recovery_edge(dependent=api, dependency=database)],
+    constraints=try! @continuity_forge.RecoveryConstraints::new(
+      target_window=try! @continuity_forge.TimeSpan::new(
+        amount=45,
+        unit=@continuity_forge.TimeUnit::Minutes,
+      ),
+      available_resources=["database", "compute", "network"],
+    ),
+  )
+  assert_eq(plan.ordered.map(recovery_key), [
+    "component:postgres-primary", "service:checkout-api", "service:checkout-worker",
+    "component:edge-router",
+  ])
+  assert_eq(plan.schedule.map(entry => entry.start_minutes), [0, 10, 30, 0])
+  assert_eq(plan.schedule.map(entry => entry.end_minutes), [10, 30, 45, 25])
+  assert_eq(plan.total_time_minutes, 45)
+  assert_eq(plan.dependency_lower_bound_minutes, 30)
+  assert_eq(plan.resource_lower_bound_minutes, 35)
+  assert_eq(plan.slack_minutes, 0)
+}
+
+///|
+test "a critical dependent raises its prerequisite priority" {
+  let database = try! recovery_component(value="postgres-primary")
+  let api = try! recovery_service(value="checkout-api")
+  let worker = try! recovery_service(value="checkout-worker")
+  let plan = try! @continuity_forge.prioritize_recovery(
+    items=[
+      try! recovery_item(
+        asset=worker,
+        impact_level=@continuity_forge.ImpactLevel::High,
+        minutes=15,
+        resource="compute",
+      ),
+      try! recovery_item(
+        asset=api,
+        impact_level=@continuity_forge.ImpactLevel::Critical,
+        minutes=20,
+        resource="network",
+      ),
+      try! recovery_item(
+        asset=database,
+        impact_level=@continuity_forge.ImpactLevel::Low,
+        minutes=10,
+        resource="compute",
+      ),
+    ],
+    dependencies=[try! recovery_edge(dependent=api, dependency=database)],
+    constraints=try! @continuity_forge.RecoveryConstraints::new(
+      target_window=try! @continuity_forge.TimeSpan::new(
+        amount=30,
+        unit=@continuity_forge.TimeUnit::Minutes,
+      ),
+      available_resources=["compute", "network"],
+    ),
+  )
+  assert_eq(plan.ordered.map(recovery_key), [
+    "component:postgres-primary", "service:checkout-api", "service:checkout-worker",
+  ])
+  assert_eq(plan.schedule.map(entry => entry.start_minutes), [0, 10, 10])
+  assert_eq(plan.total_time_minutes, 30)
+}
+
+///|
+test "independent resources satisfy a window shorter than the work sum" {
+  let api = try! recovery_service(value="checkout-api")
+  let database = try! recovery_component(value="postgres-primary")
+  let plan = try! @continuity_forge.prioritize_recovery(
+    items=[
+      try! recovery_item(
+        asset=api,
+        impact_level=@continuity_forge.ImpactLevel::High,
+        minutes=40,
+        resource="compute",
+      ),
+      try! recovery_item(
+        asset=database,
+        impact_level=@continuity_forge.ImpactLevel::Medium,
+        minutes=40,
+        resource="database",
+      ),
+    ],
+    dependencies=[],
+    constraints=try! recovery_constraints(target_minutes=40),
+  )
+  assert_eq(plan.schedule.map(entry => entry.start_minutes), [0, 0])
+  assert_eq(plan.total_time_minutes, 40)
+  assert_eq(plan.slack_minutes, 0)
+}
+
+///|
+test "resource serialization proves an impossible window" {
+  let api = try! recovery_service(value="checkout-api")
+  let worker = try! recovery_service(value="checkout-worker")
+  try
+    @continuity_forge.prioritize_recovery(
+      items=[
+        try! recovery_item(
+          asset=api,
+          impact_level=@continuity_forge.ImpactLevel::High,
+          minutes=40,
+          resource="compute",
+        ),
+        try! recovery_item(
+          asset=worker,
+          impact_level=@continuity_forge.ImpactLevel::Medium,
+          minutes=40,
+          resource="compute",
+        ),
+      ],
+      dependencies=[],
+      constraints=try! recovery_constraints(target_minutes=60),
+    )
+  catch {
+    @continuity_forge.ModelError::RecoveryTargetUnmet(message) =>
+      inspect(
+        message,
+        content="target 60m is below unavoidable lower bound 80m (dependency 40m, resource 80m)",
+      )
+    _ => fail("wrong error for resource lower bound")
+  } noraise {
+    _ => fail("expected an impossible recovery window")
+  }
+}
+
+///|
+test "later selected work can fill an earlier resource gap" {
+  let database = try! recovery_component(value="database")
+  let api = try! recovery_service(value="api")
+  let router = try! recovery_component(value="router")
+  let gateway = try! recovery_service(value="gateway")
+  let plan = try! @continuity_forge.prioritize_recovery(
+    items=[
+      try! recovery_item(
+        asset=gateway,
+        impact_level=@continuity_forge.ImpactLevel::High,
+        minutes=2,
+        resource="database",
+      ),
+      try! recovery_item(
+        asset=router,
+        impact_level=@continuity_forge.ImpactLevel::High,
+        minutes=2,
+        resource="compute",
+      ),
+      try! recovery_item(
+        asset=api,
+        impact_level=@continuity_forge.ImpactLevel::Critical,
+        minutes=2,
+        resource="compute",
+      ),
+      try! recovery_item(
+        asset=database,
+        impact_level=@continuity_forge.ImpactLevel::Critical,
+        minutes=2,
+        resource="database",
+      ),
+    ],
+    dependencies=[
+      try! recovery_edge(dependent=api, dependency=database),
+      try! recovery_edge(dependent=gateway, dependency=router),
+    ],
+    constraints=try! recovery_constraints(target_minutes=4),
+  )
+  assert_eq(plan.ordered.map(recovery_key), [
+    "component:database", "service:api", "component:router", "service:gateway",
+  ])
+  assert_eq(plan.schedule.map(entry => entry.start_minutes), [0, 2, 0, 2])
+  assert_eq(plan.schedule.map(entry => entry.end_minutes), [2, 4, 2, 4])
+  assert_eq(plan.total_time_minutes, 4)
+  assert_eq(plan.dependency_lower_bound_minutes, 4)
+  assert_eq(plan.resource_lower_bound_minutes, 4)
 }

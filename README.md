@@ -41,9 +41,11 @@ ContinuityForge/
 │   └── app.js     # 本地交互、模拟计算、证据导出与浏览器存储
 ├── server/     # API、权限、持久化和输入校验
 ├── docs/
-│   └── operations.md # 安装、运行、操作和发布检查
+│   ├── operations.md # 安装、运行、操作和发布检查
+│   └── recovery-scheduling.md # 恢复窗口算法、下界与案例
 ├── examples/
-│   └── minimal/      # 可运行的领域闭环示例与脱敏输入
+│   ├── minimal/      # 可运行的领域闭环示例与脱敏输入
+│   └── recovery_window/ # 资源独占、并行和恢复窗口案例
 └── integration/ # 跨语言构建与集成验证
 ```
 
@@ -100,6 +102,10 @@ python -m http.server 8765 --directory web
 
 打开 `http://127.0.0.1:8765/`，依次使用 Inventory、Business impact、Incident impact、Recovery plans 和 Drill log；最后点击 **Export evidence** 下载证据 JSON。完整操作说明见 [docs/operations.md](docs/operations.md)。
 
+### 验证资源受限恢复窗口
+
+运行 `moon run examples/recovery_window`，查看依赖完成时间、独占资源排队和不同团队并行产生的逐项起止时间。示例中任务时长合计 70 分钟，实际排程窗口为 45 分钟；最长依赖路径下界为 30 分钟，单资源负载下界为 35 分钟。计算公式、拒绝条件和算法边界见 [docs/recovery-scheduling.md](docs/recovery-scheduling.md)。静态 Web 工作区的恢复时间是演示用串行估算，资源受限排程以 MoonBit 核心结果为准。
+
 ## 本地验证
 
 需要安装 MoonBit 工具链和 Node.js。仓库根目录可运行：
@@ -127,6 +133,7 @@ moon check --target all --deny-warn
 moon test --target all
 moon build --target all --deny-warn
 moon run examples/minimal
+moon run examples/recovery_window
 node integration/js/smoke.mjs
 node --check web/app.js
 git diff --check

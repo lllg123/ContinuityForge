@@ -233,8 +233,12 @@ pub fn RecoveryItem::new(asset~ : AssetRef, impact_level~ : ImpactLevel, recover
 
 pub(all) struct RecoveryPlan {
   ordered : Array[RecoveryItem]
+  schedule : Array[RecoveryScheduleEntry]
   total_time_minutes : Int
   target_window_minutes : Int
+  dependency_lower_bound_minutes : Int
+  resource_lower_bound_minutes : Int
+  slack_minutes : Int
 }
 
 pub(all) struct RecoveryPlaybook {
@@ -246,6 +250,12 @@ pub fn RecoveryPlaybook::approve_step(Self, step_id~ : String) -> Self raise Mod
 pub fn RecoveryPlaybook::begin_step(Self, step_id~ : String) -> Self raise ModelError
 pub fn RecoveryPlaybook::complete_step(Self, step_id~ : String) -> Self raise ModelError
 pub fn RecoveryPlaybook::new(id~ : String, steps~ : Array[RecoveryStep]) -> Self raise ModelError
+
+pub(all) struct RecoveryScheduleEntry {
+  item : RecoveryItem
+  start_minutes : Int
+  end_minutes : Int
+}
 
 pub(all) struct RecoveryStep {
   id : String
