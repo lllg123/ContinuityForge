@@ -2,6 +2,11 @@
 package "lllg123/continuity_forge/scheduling"
 
 // Values
+pub fn evaluate_schedule(problem~ : SchedulingProblem, schedule~ : Array[ScheduleEntry], algorithm~ : String) -> AnalysisResult raise SchedulingError
+
+pub fn validate_problem(SchedulingProblem) -> Unit raise SchedulingError
+
+pub fn validate_schedule(SchedulingProblem, Array[ScheduleEntry]) -> Unit raise SchedulingError
 
 // Errors
 pub(all) suberror SchedulingError {
@@ -48,6 +53,13 @@ pub(all) struct ScheduleEntry {
   finish : Int
 }
 pub fn ScheduleEntry::new(task_id~ : String, resource_id~ : String, start~ : Int, finish~ : Int) -> Self raise SchedulingError
+
+pub(all) struct SchedulingProblem {
+  tasks : Array[Task]
+  dependencies : Array[Dependency]
+  constraints : Constraints
+}
+pub fn SchedulingProblem::new(tasks~ : Array[Task], dependencies~ : Array[Dependency], constraints~ : Constraints) -> Self raise SchedulingError
 
 pub(all) struct Task {
   id : String
