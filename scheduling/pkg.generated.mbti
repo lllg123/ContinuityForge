@@ -1,0 +1,62 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "lllg123/continuity_forge/scheduling"
+
+// Values
+
+// Errors
+pub(all) suberror SchedulingError {
+  InvalidTask(String)
+  InvalidResource(String)
+  InvalidDependency(String)
+  InvalidConstraint(String)
+  InvalidSchedule(String)
+}
+
+// Types and methods
+pub(all) struct AnalysisResult {
+  schedule : Array[ScheduleEntry]
+  makespan : Int
+  explanation : Explanation
+}
+
+pub(all) struct Constraints {
+  resources : Array[Resource]
+  target_makespan : Int?
+}
+pub fn Constraints::new(resources~ : Array[Resource], target_makespan~ : Int?) -> Self raise SchedulingError
+
+pub(all) struct Dependency {
+  task_id : String
+  prerequisite_id : String
+}
+pub fn Dependency::new(task_id~ : String, prerequisite_id~ : String) -> Self raise SchedulingError
+
+pub(all) struct Explanation {
+  algorithm : String
+  details : Array[String]
+}
+
+pub(all) struct Resource {
+  id : String
+}
+pub fn Resource::new(id~ : String) -> Self raise SchedulingError
+
+pub(all) struct ScheduleEntry {
+  task_id : String
+  resource_id : String
+  start : Int
+  finish : Int
+}
+pub fn ScheduleEntry::new(task_id~ : String, resource_id~ : String, start~ : Int, finish~ : Int) -> Self raise SchedulingError
+
+pub(all) struct Task {
+  id : String
+  duration : Int
+  priority : Int
+  resource_id : String
+}
+pub fn Task::new(id~ : String, duration~ : Int, priority~ : Int, resource_id~ : String) -> Self raise SchedulingError
+
+// Type aliases
+
+// Traits
