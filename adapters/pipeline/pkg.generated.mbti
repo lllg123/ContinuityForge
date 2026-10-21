@@ -1,0 +1,33 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "lllg123/continuity_forge/adapters/pipeline"
+
+import {
+  "lllg123/continuity_forge/scheduling",
+}
+
+// Values
+pub fn analyze_pipeline(stages~ : Array[PipelineStage], runners~ : Array[String], target_makespan~ : Int?, search_budget~ : Int) -> PipelineAnalysis raise @scheduling.SchedulingError
+
+// Errors
+
+// Types and methods
+pub(all) struct PipelineAnalysis {
+  problem : @scheduling.SchedulingProblem
+  baselines : Array[@scheduling.AnalysisResult]
+  optimization : @scheduling.OptimizationReport
+  bottleneck_runner : String?
+  bottleneck_load : Int
+  target_met : Bool?
+}
+
+pub(all) struct PipelineStage {
+  id : String
+  duration : Int
+  runner : String
+  priority : Int
+  prerequisites : Array[String]
+}
+
+// Type aliases
+
+// Traits

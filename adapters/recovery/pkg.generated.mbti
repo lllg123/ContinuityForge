@@ -1,0 +1,26 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "lllg123/continuity_forge/adapters/recovery"
+
+import {
+  "lllg123/continuity_forge",
+  "lllg123/continuity_forge/scheduling",
+}
+
+// Values
+pub fn analyze_recovery(failed_asset~ : @continuity_forge.AssetRef, assets~ : Array[@continuity_forge.AssetRef], dependencies~ : Array[@continuity_forge.Dependency], items~ : Array[@continuity_forge.RecoveryItem], constraints~ : @continuity_forge.RecoveryConstraints, search_budget~ : Int) -> RecoveryAnalysis raise
+
+// Errors
+
+// Types and methods
+pub(all) struct RecoveryAnalysis {
+  incident : @continuity_forge.IncidentImpact
+  problem : @scheduling.SchedulingProblem
+  optimization : @scheduling.OptimizationReport
+  target_window_minutes : Int
+  target_met : Bool
+  explanation : Array[String]
+}
+
+// Type aliases
+
+// Traits
