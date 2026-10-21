@@ -27,4 +27,6 @@
 
 `RecoveryHeuristic` 复刻旧 `recovery.mbt` 的选择规则，但以通用整数 `Task.priority` 代替 `ImpactLevel`。故障恢复调用者可把 Low/Medium/High/Critical 映射为 0/1/2/3；映射本身尚未封装为领域适配器。三种方法均为列表排程启发式，不能保证最小 makespan。当前数组索引与资源空档扫描在高依赖密度下可能较慢；基准测试和优化实现仍需单独完成。
 
-`scheduling/interfaces_test.mbt` 用同一接口验证恢复任务（数据库与计算团队，45 单位）和 CI 流水线任务（两个 runner，13 单位）。`scheduling/baselines_test.mbt` 在相同输入上运行全部三种基线，并固定优先级传播、关键路径选择、目标拒绝、空任务及整数溢出行为。这些是确定性测试数据，不是生产部署或性能实验。改进算法、精确解参照、领域适配器和 Web 调用仍属后续提交。
+`scheduling/interfaces_test.mbt` 用同一接口验证恢复任务（数据库与计算团队，45 单位）和 CI 流水线任务（两个 runner，13 单位）。`scheduling/baselines_test.mbt` 在相同输入上运行全部三种基线，并固定优先级传播、关键路径选择、目标拒绝、空任务及整数溢出行为。这些是确定性测试数据，不是生产部署或性能实验。
+
+有预算的改进搜索已在 `optimize_schedule` 实现；假设、搜索流程及单个合成反例见 [optimized-scheduling.md](optimized-scheduling.md)。精确解参照、系统性基准实验、领域适配器和 Web 调用仍属后续提交。

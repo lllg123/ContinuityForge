@@ -4,6 +4,8 @@ package "lllg123/continuity_forge/scheduling"
 // Values
 pub fn evaluate_schedule(problem~ : SchedulingProblem, schedule~ : Array[ScheduleEntry], algorithm~ : String) -> AnalysisResult raise SchedulingError
 
+pub fn optimize_schedule(SchedulingProblem, Int) -> OptimizationReport raise SchedulingError
+
 pub fn run_baseline(SchedulingProblem, Baseline) -> AnalysisResult raise SchedulingError
 
 pub fn validate_problem(SchedulingProblem) -> Unit raise SchedulingError
@@ -47,6 +49,16 @@ pub fn Dependency::new(task_id~ : String, prerequisite_id~ : String) -> Self rai
 pub(all) struct Explanation {
   algorithm : String
   details : Array[String]
+}
+
+pub(all) struct OptimizationReport {
+  best_baseline_makespan : Int
+  initial_makespan : Int
+  lower_bound : Int
+  result : AnalysisResult
+  candidates_evaluated : Int
+  accepted_moves : Int
+  budget : Int
 }
 
 pub(all) struct Resource {

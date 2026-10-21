@@ -173,6 +173,47 @@ fn earliest_slot(
 }
 
 ///|
+/// Decode a precedence-feasible activity list with the shared earliest-slot
+/// rule. The independent validator checks the completed candidate.
+fn decode_order(
+  problem : SchedulingProblem,
+  order : Array[Int],
+  algorithm : String,
+) -> AnalysisResult raise SchedulingError {
+  let completion : Array[Int] = []
+  for _ in problem.tasks {
+    completion.push(0)
+  }
+  let schedule : Array[ScheduleEntry] = []
+  for index in order {
+    let task = problem.tasks[index]
+    let mut earliest = 0
+    for edge in problem.dependencies {
+      if edge.task_id == task.id {
+        let prerequisite = match
+          task_index(problem.tasks, edge.prerequisite_id) {
+          Some(value) => value
+          None => abort("validated prerequisite disappeared")
+        }
+        if completion[prerequisite] > earliest {
+          earliest = completion[prerequisite]
+        }
+      }
+    }
+    let start = earliest_slot(task, earliest, schedule)
+    let finish = checked_finish(start, task.duration)
+    schedule.push({
+      task_id: task.id,
+      resource_id: task.resource_id,
+      start,
+      finish,
+    })
+    completion[index] = finish
+  }
+  evaluate_schedule(problem~, schedule~, algorithm~)
+}
+
+///|
 /// Runs one baseline and independently validates the resulting schedule.
 /// Priority in RecoveryHeuristic is the caller's domain-neutral integer rank.
 pub fn run_baseline(
@@ -186,12 +227,10 @@ pub fn run_baseline(
     RecoveryHeuristic | CriticalPath => path_metrics(problem, order)
   }
   let selected : Array[Bool] = []
-  let completion : Array[Int] = []
   for _ in problem.tasks {
     selected.push(false)
-    completion.push(0)
   }
-  let schedule : Array[ScheduleEntry] = []
+  let selection_order : Array[Int] = []
   for position in 0..<problem.tasks.length() {
     let index = match baseline {
       StableTopological => order[position]
@@ -216,30 +255,8 @@ pub fn run_baseline(
         }
       }
     }
-    let task = problem.tasks[index]
-    let mut earliest = 0
-    for edge in problem.dependencies {
-      if edge.task_id == task.id {
-        let prerequisite = match
-          task_index(problem.tasks, edge.prerequisite_id) {
-          Some(value) => value
-          None => abort("validated prerequisite disappeared")
-        }
-        if completion[prerequisite] > earliest {
-          earliest = completion[prerequisite]
-        }
-      }
-    }
-    let start = earliest_slot(task, earliest, schedule)
-    let finish = checked_finish(start, task.duration)
-    schedule.push({
-      task_id: task.id,
-      resource_id: task.resource_id,
-      start,
-      finish,
-    })
-    completion[index] = finish
+    selection_order.push(index)
     selected[index] = true
   }
-  evaluate_schedule(problem~, schedule~, algorithm=baseline_name(baseline))
+  decode_order(problem, selection_order, baseline_name(baseline))
 }
