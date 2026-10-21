@@ -32,6 +32,7 @@ ContinuityForge/
 ├── recovery.mbt # 依赖约束、影响等级和资源窗口下的恢复排序
 ├── scheduling/ # 独立的通用任务模型、调度基线与排程校验
 ├── adapters/   # 故障恢复与 CI 流水线到通用调度问题的映射
+├── benchmark/  # 固定种子、多规模的算法对比与 CSV/JSON/SVG 结果
 ├── playbook.mbt # 恢复步骤、前置条件与人工审批状态机
 ├── drill.mbt    # 演练状态与有序审计时间线
 ├── api.mbt      # 统一暴露经过校验的领域操作
@@ -112,6 +113,10 @@ python -m http.server 8765 --directory web
 ### 验证 CI 流水线调度
 
 运行 `moon run examples/ci_pipeline`。这是明确标注的合成案例：七个编译、检查、测试和打包阶段分配到三个独占 Runner；阶段间有前置依赖，互不阻塞的阶段可以并行。程序打印各阶段输入、三种基线与优化结果的完工时间、逐项起止时间、负载最高的 Runner、下界及 40 分钟目标是否达到。案例由 [流水线适配器](docs/scenario-adapters.md)调用与故障恢复相同的通用调度核心，时长不代表真实生产流水线。
+
+### 复现算法对比
+
+运行 `moon test benchmark/runner` 验证固定种子实例和指标边界；再按 [benchmark/README.md](benchmark/README.md) 的命令生成逐次 CSV/JSON、汇总 CSV 与两张 SVG 图表。覆盖 12–20、50–100、200 个任务的 Small、Medium、Large 案例，并额外用 6 个任务的实例验证已证明最优解的差距。数据均为合成输入，执行时间是本机测量值。
 
 ## 本地验证
 

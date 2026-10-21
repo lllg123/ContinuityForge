@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1050" height="570" viewBox="0 0 1050 570">
+<rect width="1050" height="570" fill="white"/>
+<text x="35" y="35" font-family="sans-serif" font-size="23">Synthetic scheduling benchmark: mean makespan (time units)</text>
+<text x="35" y="58" font-family="sans-serif" font-size="13">Three fixed-seed repeats per case; smaller is better. Reference has six tasks.</text>
+<rect x="50" y="454" width="25" height="6" fill="#4e79a7"/>
+<rect x="80" y="454" width="25" height="6" fill="#f28e2b"/>
+<rect x="110" y="454" width="25" height="6" fill="#59a14f"/>
+<rect x="140" y="454" width="25" height="6" fill="#e15759"/>
+<text x="50" y="480" font-family="sans-serif" font-size="13">micro</text>
+<rect x="215" y="448" width="25" height="12" fill="#4e79a7"/>
+<rect x="245" y="447" width="25" height="13" fill="#f28e2b"/>
+<rect x="275" y="447" width="25" height="13" fill="#59a14f"/>
+<rect x="305" y="448" width="25" height="12" fill="#e15759"/>
+<text x="215" y="480" font-family="sans-serif" font-size="13">small-12</text>
+<rect x="380" y="443" width="25" height="17" fill="#4e79a7"/>
+<rect x="410" y="444" width="25" height="16" fill="#f28e2b"/>
+<rect x="440" y="444" width="25" height="16" fill="#59a14f"/>
+<rect x="470" y="444" width="25" height="16" fill="#e15759"/>
+<text x="380" y="480" font-family="sans-serif" font-size="13">small-20</text>
+<rect x="545" y="416" width="25" height="44" fill="#4e79a7"/>
+<rect x="575" y="416" width="25" height="44" fill="#f28e2b"/>
+<rect x="605" y="416" width="25" height="44" fill="#59a14f"/>
+<rect x="635" y="416" width="25" height="44" fill="#e15759"/>
+<text x="545" y="480" font-family="sans-serif" font-size="13">medium-50</text>
+<rect x="710" y="415" width="25" height="45" fill="#4e79a7"/>
+<rect x="740" y="414" width="25" height="46" fill="#f28e2b"/>
+<rect x="770" y="415" width="25" height="45" fill="#59a14f"/>
+<rect x="800" y="415" width="25" height="45" fill="#e15759"/>
+<text x="710" y="480" font-family="sans-serif" font-size="13">medium-100</text>
+<rect x="875" y="90" width="25" height="370" fill="#4e79a7"/>
+<rect x="905" y="90" width="25" height="370" fill="#f28e2b"/>
+<rect x="935" y="90" width="25" height="370" fill="#59a14f"/>
+<rect x="965" y="90" width="25" height="370" fill="#e15759"/>
+<text x="875" y="480" font-family="sans-serif" font-size="13">large-200</text>
+<rect x="35" y="515" width="15" height="15" fill="#4e79a7"/>
+<text x="57" y="528" font-family="sans-serif" font-size="13">stable-topological</text>
+<rect x="285" y="515" width="15" height="15" fill="#f28e2b"/>
+<text x="307" y="528" font-family="sans-serif" font-size="13">recovery-heuristic</text>
+<rect x="535" y="515" width="15" height="15" fill="#59a14f"/>
+<text x="557" y="528" font-family="sans-serif" font-size="13">critical-path</text>
+<rect x="785" y="515" width="15" height="15" fill="#e15759"/>
+<text x="807" y="528" font-family="sans-serif" font-size="13">budgeted-search</text>
+</svg>

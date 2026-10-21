@@ -1,0 +1,6 @@
+import {
+  "moonbitlang/core/env",
+  "lllg123/continuity_forge/scheduling",
+}
+
+pkgtype(kind: "executable")
