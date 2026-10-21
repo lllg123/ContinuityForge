@@ -4,6 +4,10 @@ package "lllg123/continuity_forge/scheduling"
 // Values
 pub fn evaluate_schedule(problem~ : SchedulingProblem, schedule~ : Array[ScheduleEntry], algorithm~ : String) -> AnalysisResult raise SchedulingError
 
+pub fn exact_reference(SchedulingProblem, Int) -> ExactReference raise SchedulingError
+
+pub fn optimality_gap_percent(AnalysisResult, ExactReference) -> Double raise SchedulingError
+
 pub fn optimize_schedule(SchedulingProblem, Int) -> OptimizationReport raise SchedulingError
 
 pub fn run_baseline(SchedulingProblem, Baseline) -> AnalysisResult raise SchedulingError
@@ -45,6 +49,13 @@ pub(all) struct Dependency {
   prerequisite_id : String
 }
 pub fn Dependency::new(task_id~ : String, prerequisite_id~ : String) -> Self raise SchedulingError
+
+pub(all) struct ExactReference {
+  best : AnalysisResult?
+  proven_optimal : Bool
+  explored_nodes : Int
+  node_budget : Int
+}
 
 pub(all) struct Explanation {
   algorithm : String

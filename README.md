@@ -50,7 +50,7 @@ ContinuityForge/
 └── integration/ # 跨语言构建与集成验证
 ```
 
-当前 web、docs 和 examples 已提供最小可复核闭环，server 仍保留为后续服务端实现边界。2.0 重构新增的通用模型、三种调度基线与候选排程校验见 [docs/scheduling-interface.md](docs/scheduling-interface.md)；有预算的搜索机制见 [docs/optimized-scheduling.md](docs/optimized-scheduling.md)。旧恢复排程尚未迁移到该接口。
+当前 web、docs 和 examples 已提供最小可复核闭环，server 仍保留为后续服务端实现边界。2.0 重构新增的通用模型、三种调度基线与候选排程校验见 [docs/scheduling-interface.md](docs/scheduling-interface.md)；有预算的搜索机制见 [docs/optimized-scheduling.md](docs/optimized-scheduling.md)，小规模精确参照见 [docs/exact-reference.md](docs/exact-reference.md)。旧恢复排程尚未迁移到该接口。
 
 ## 开发原则
 
