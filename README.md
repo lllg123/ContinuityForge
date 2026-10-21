@@ -47,7 +47,8 @@ ContinuityForge/
 │   └── recovery-scheduling.md # 恢复窗口算法、下界与案例
 ├── examples/
 │   ├── minimal/      # 可运行的领域闭环示例与脱敏输入
-│   └── recovery_window/ # 资源独占、并行和恢复窗口案例
+│   ├── recovery_window/ # 资源独占、并行和恢复窗口案例
+│   └── ci_pipeline/ # 三个 Runner 上的构建、测试和打包排程
 └── integration/ # 跨语言构建与集成验证
 ```
 
@@ -108,6 +109,10 @@ python -m http.server 8765 --directory web
 
 运行 `moon run examples/recovery_window`，查看依赖完成时间、独占资源排队和不同团队并行产生的逐项起止时间。示例中任务时长合计 70 分钟，实际排程窗口为 45 分钟；最长依赖路径下界为 30 分钟，单资源负载下界为 35 分钟。计算公式、拒绝条件和算法边界见 [docs/recovery-scheduling.md](docs/recovery-scheduling.md)。静态 Web 工作区的恢复时间是演示用串行估算，资源受限排程以 MoonBit 核心结果为准。
 
+### 验证 CI 流水线调度
+
+运行 `moon run examples/ci_pipeline`。这是明确标注的合成案例：七个编译、检查、测试和打包阶段分配到三个独占 Runner；阶段间有前置依赖，互不阻塞的阶段可以并行。程序打印各阶段输入、三种基线与优化结果的完工时间、逐项起止时间、负载最高的 Runner、下界及 40 分钟目标是否达到。案例由 [流水线适配器](docs/scenario-adapters.md)调用与故障恢复相同的通用调度核心，时长不代表真实生产流水线。
+
 ## 本地验证
 
 需要安装 MoonBit 工具链和 Node.js。仓库根目录可运行：
@@ -136,6 +141,7 @@ moon test --target all
 moon build --target all --deny-warn
 moon run examples/minimal
 moon run examples/recovery_window
+moon run examples/ci_pipeline
 node integration/js/smoke.mjs
 node --check web/app.js
 git diff --check

@@ -60,6 +60,9 @@ jobs:
       - name: Run resource scheduling example
         run: moon run examples/recovery_window
 
+      - name: Run CI pipeline scheduling example
+        run: moon run examples/ci_pipeline
+
       - name: Run JavaScript integration probe
         run: node integration/js/smoke.mjs
 

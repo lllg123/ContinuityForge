@@ -12,4 +12,4 @@
 
 `analyze_pipeline` 接受阶段 ID、整数时长、Runner、优先级和前置阶段，以及 Runner 列表、可选目标和预算。阶段可以代表编译、静态检查或测试，单位由调用者统一约定。返回同一问题上的三种基线与优化结果、负载最高的 Runner 及其总时长、目标是否达到。最大 Runner 负载是瓶颈下界，不等于全部前置约束下的最优工期。
 
-`adapters/recovery/adapter_test.mbt` 与 `adapters/pipeline/adapter_test.mbt` 使用明确的合成输入，分别检查故障路径、旧 API 兼容、Runner 并行、排程可行性、目标和资源错误。它们证明代码复用了同一 MoonBit 调度包；这些测试不是实际企业部署或公开 CI 数据。可运行的独立 CI 流水线示例、真实需求证据、批量 benchmark 与 Web 集成仍属于后续阶段。
+`adapters/recovery/adapter_test.mbt` 与 `adapters/pipeline/adapter_test.mbt` 使用明确的合成输入，分别检查故障路径、旧 API 兼容、Runner 并行、排程可行性、目标和资源错误。可运行的独立案例见 `examples/ci_pipeline`：七个阶段和三个独占 Runner 的输入、算法比较、逐项排程与瓶颈负载可以直接复核。它们证明代码复用了同一 MoonBit 调度包；这些输入不是实际企业部署或公开 CI 数据。真实需求证据、批量 benchmark 与 Web 集成仍属于后续阶段。
