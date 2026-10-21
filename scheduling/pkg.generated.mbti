@@ -4,6 +4,8 @@ package "lllg123/continuity_forge/scheduling"
 // Values
 pub fn evaluate_schedule(problem~ : SchedulingProblem, schedule~ : Array[ScheduleEntry], algorithm~ : String) -> AnalysisResult raise SchedulingError
 
+pub fn run_baseline(SchedulingProblem, Baseline) -> AnalysisResult raise SchedulingError
+
 pub fn validate_problem(SchedulingProblem) -> Unit raise SchedulingError
 
 pub fn validate_schedule(SchedulingProblem, Array[ScheduleEntry]) -> Unit raise SchedulingError
@@ -22,6 +24,12 @@ pub(all) struct AnalysisResult {
   schedule : Array[ScheduleEntry]
   makespan : Int
   explanation : Explanation
+}
+
+pub(all) enum Baseline {
+  StableTopological
+  RecoveryHeuristic
+  CriticalPath
 }
 
 pub(all) struct Constraints {

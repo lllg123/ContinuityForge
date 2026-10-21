@@ -30,7 +30,7 @@ ContinuityForge/
 ├── bia.mbt     # RTO、RPO、最大中断时间与影响等级
 ├── impact.mbt  # 故障影响传播与稳定路径
 ├── recovery.mbt # 依赖约束、影响等级和资源窗口下的恢复排序
-├── scheduling/ # 独立的通用任务模型与候选排程校验接口
+├── scheduling/ # 独立的通用任务模型、调度基线与排程校验
 ├── playbook.mbt # 恢复步骤、前置条件与人工审批状态机
 ├── drill.mbt    # 演练状态与有序审计时间线
 ├── api.mbt      # 统一暴露经过校验的领域操作
@@ -50,7 +50,7 @@ ContinuityForge/
 └── integration/ # 跨语言构建与集成验证
 ```
 
-当前 web、docs 和 examples 已提供最小可复核闭环，server 仍保留为后续服务端实现边界。2.0 重构新增的通用模型与候选排程校验见 [docs/scheduling-interface.md](docs/scheduling-interface.md)；旧恢复排程尚未迁移到该接口。
+当前 web、docs 和 examples 已提供最小可复核闭环，server 仍保留为后续服务端实现边界。2.0 重构新增的通用模型、三种调度基线与候选排程校验见 [docs/scheduling-interface.md](docs/scheduling-interface.md)；旧恢复排程尚未迁移到该接口。
 
 ## 开发原则
 
