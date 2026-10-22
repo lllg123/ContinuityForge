@@ -381,6 +381,7 @@
                   <tbody id="recovery-table"></tbody>
                 </table>
               </div>
+              <p class="path-copy" id="recovery-error" role="status"></p>
             </section>
 
             <aside class="panel constraint-panel">
@@ -392,17 +393,13 @@
                 <span class="signal-icon">↗</span>
               </div>
               <div class="constraint-stat"><span>Target window</span><strong>180m</strong></div>
-              <div class="constraint-stat"><span>Projected total</span><strong id="recovery-window">0m</strong></div>
+              <div class="constraint-stat"><span>Projected makespan</span><strong id="recovery-window">0m</strong></div>
               <div class="progress-track constraint-progress"><span id="recovery-progress"></span></div>
               <div class="signal-meta"><span>Window utilization</span><strong id="recovery-utilization">0%</strong></div>
               <div class="divider"></div>
               <span class="eyebrow constraint-eyebrow">AVAILABLE RESOURCES</span>
-              <div class="resource-list">
-                <span><i class="status-dot green"></i> database-team</span>
-                <span><i class="status-dot green"></i> platform-team</span>
-                <span><i class="status-dot amber"></i> payments-team</span>
-              </div>
-              <p class="path-copy">The queue is recalculated from current BIA scores and dependency edges.</p>
+              <div class="resource-list" id="recovery-resources"></div>
+              <p class="path-copy" id="recovery-explanation">The MoonBit engine schedules current assets on exclusive owner resources.</p>
             </aside>
           </div>
         </section>

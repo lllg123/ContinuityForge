@@ -54,6 +54,12 @@ jobs:
       - name: Build all targets
         run: moon build --target all --deny-warn
 
+      - name: Verify browser MoonBit engine
+        run: |
+          moon build web/engine --target js --release --deny-warn
+          cmp _build/js/release/build/web/engine/engine.js web/engine.mjs
+          node integration/js/web-engine.mjs
+
       - name: Run minimal domain example
         run: moon run examples/minimal
 

@@ -41,7 +41,9 @@ ContinuityForge/
 ├── web/
 │   ├── index.html # 库存、BIA、故障、恢复与演练工作区页面
 │   ├── styles.css # 工作区视觉样式
-│   └── app.js     # 本地交互、模拟计算、证据导出与浏览器存储
+│   ├── app.js     # 本地交互、MoonBit 引擎调用、证据导出与浏览器存储
+│   ├── engine/    # 浏览器用 MoonBit JSON 边界
+│   └── engine.mjs # 编译并发布的 MoonBit ESM
 ├── server/     # API、权限、持久化和输入校验
 ├── docs/
 │   ├── operations.md # 安装、运行、操作和发布检查
@@ -104,11 +106,11 @@ moon run examples/minimal
 python -m http.server 8765 --directory web
 ```
 
-打开 `http://127.0.0.1:8765/`，依次使用 Inventory、Business impact、Incident impact、Recovery plans 和 Drill log；最后点击 **Export evidence** 下载证据 JSON。完整操作说明见 [docs/operations.md](docs/operations.md)。
+打开 `http://127.0.0.1:8765/`，依次使用 Inventory、Business impact、Incident impact、Recovery plans 和 Drill log；最后点击 **Export evidence** 下载证据 JSON。故障传播、依赖校验及恢复排程由随仓库发布的 MoonBit JavaScript 引擎计算；输入非法时页面显示引擎错误。完整操作说明见 [docs/operations.md](docs/operations.md)。
 
 ### 验证资源受限恢复窗口
 
-运行 `moon run examples/recovery_window`，查看依赖完成时间、独占资源排队和不同团队并行产生的逐项起止时间。示例中任务时长合计 70 分钟，实际排程窗口为 45 分钟；最长依赖路径下界为 30 分钟，单资源负载下界为 35 分钟。计算公式、拒绝条件和算法边界见 [docs/recovery-scheduling.md](docs/recovery-scheduling.md)。静态 Web 工作区的恢复时间是演示用串行估算，资源受限排程以 MoonBit 核心结果为准。
+运行 `moon run examples/recovery_window`，查看依赖完成时间、独占资源排队和不同团队并行产生的逐项起止时间。示例中任务时长合计 70 分钟，实际排程窗口为 45 分钟；最长依赖路径下界为 30 分钟，单资源负载下界为 35 分钟。计算公式、拒绝条件和算法边界见 [docs/recovery-scheduling.md](docs/recovery-scheduling.md)。Web 工作区现在也调用 MoonBit 排程核心，恢复时长仍来自 BIA 的演示估算输入。
 
 ### 验证 CI 流水线调度
 

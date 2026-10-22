@@ -1,3 +1,5 @@
+import { analyze_workspace } from "./engine.mjs"
+
 const STORAGE_KEY = "continuityforge-web-v1"
 
 const DEFAULT_STATE = {
@@ -99,6 +101,7 @@ const copyDefaultState = () => ({
 
 let state = loadState()
 let toastTimer
+let currentEngineReply
 
 function loadState() {
   try {
@@ -178,22 +181,21 @@ function impactRank(value) {
   return { Critical: 4, High: 3, Medium: 2, Low: 1 }[value] ?? 0
 }
 
-function dependentImpact(failedId) {
-  const impacts = []
-  const queue = [{ id: failedId, path: [failedId] }]
-  const visited = new Set([failedId])
-  while (queue.length) {
-    const current = queue.shift()
-    state.assets.forEach((asset) => {
-      if (!visited.has(asset.id) && (asset.dependsOn ?? []).includes(current.id)) {
-        visited.add(asset.id)
-        const path = current.path.concat(asset.id)
-        impacts.push({ asset, path, depth: path.length - 1 })
-        queue.push({ id: asset.id, path })
-      }
-    })
+function evaluateWorkspace(failedAssetId) {
+  const request = {
+    assets: state.assets.map((asset) => ({
+      id: asset.id,
+      asset_type: asset.type,
+      depends_on: asset.dependsOn ?? [],
+      duration: recoveryEstimate(asset),
+      resource: asset.owner,
+      priority: impactRank(asset.criticality) + (biaFor(asset.id)?.score ?? 0),
+    })),
+    failed_asset_id: failedAssetId ?? "",
+    target_window: 180,
+    search_budget: 50,
   }
-  return impacts
+  return JSON.parse(analyze_workspace(JSON.stringify(request)))
 }
 
 function assetImpactLevel(asset) {
@@ -219,7 +221,14 @@ function renderIncident() {
   if (!select.value && select.options.length) select.selectedIndex = 0
 
   const failed = assetById(select.value)
-  const impacts = failed ? dependentImpact(failed.id) : []
+  currentEngineReply = evaluateWorkspace(failed?.id)
+  const impacts = currentEngineReply.ok
+    ? currentEngineReply.result.affected.map((item) => ({
+        asset: assetById(item.asset_id),
+        path: item.path,
+        depth: item.path.length - 1,
+      }))
+    : []
   const maxDepth = impacts.reduce((max, item) => Math.max(max, item.depth), 0)
   const highest = impacts.reduce(
     (currentLevel, item) =>
@@ -288,7 +297,9 @@ function renderIncident() {
         .join("")
     : ""
   document.querySelector("#impact-chain").innerHTML = chain
-  document.querySelector("#incident-explanation").textContent = failed
+  document.querySelector("#incident-explanation").textContent = !currentEngineReply.ok
+    ? "MoonBit validation: " + currentEngineReply.error
+    : failed
     ? "Failure of " +
       failed.name +
       " reaches " +
@@ -308,32 +319,18 @@ function biaFor(assetId) {
 }
 
 function recoveryQueue() {
-  const pending = [...state.assets]
-  const ordered = []
-  let hasCycle = false
-  while (pending.length) {
-    let ready = pending.filter((asset) =>
-      (asset.dependsOn ?? []).every(
-        (dependency) =>
-          ordered.some((item) => item.id === dependency) || !assetById(dependency),
-      ),
-    )
-    if (!ready.length) {
-      hasCycle = true
-      ready = [...pending]
-    }
-    ready.sort((left, right) => {
-      const scoreDiff = (biaFor(right.id)?.score ?? 0) - (biaFor(left.id)?.score ?? 0)
-      if (scoreDiff) return scoreDiff
-      const criticalityDiff =
-        impactRank(right.criticality) - impactRank(left.criticality)
-      return criticalityDiff || left.id.localeCompare(right.id)
-    })
-    const next = ready[0]
-    pending.splice(pending.indexOf(next), 1)
-    ordered.push(next)
+  if (!currentEngineReply?.ok) {
+    return { assets: [], schedule: [], makespan: 0, hasCycle: true }
   }
-  return { assets: ordered, hasCycle }
+  const schedule = [...currentEngineReply.result.optimized.schedule].sort(
+    (left, right) => left.start - right.start || left.asset_id.localeCompare(right.asset_id),
+  )
+  return {
+    assets: schedule.map((entry) => assetById(entry.asset_id)),
+    schedule,
+    makespan: currentEngineReply.result.optimized.makespan,
+    hasCycle: false,
+  }
 }
 
 function recoveryEstimate(asset) {
@@ -344,11 +341,35 @@ function renderRecovery() {
   const queue = recoveryQueue()
   const total = queue.assets.reduce((sum, asset) => sum + recoveryEstimate(asset), 0)
   document.querySelector("#nav-recovery-count").textContent = queue.assets.length
-  document.querySelector("#recovery-total").textContent = total + " min total"
-  document.querySelector("#recovery-window").textContent = total + "m"
-  const utilization = Math.round((total / 180) * 100)
+  document.querySelector("#recovery-total").textContent = total + " min work"
+  document.querySelector("#recovery-window").textContent = queue.makespan + "m"
+  const utilization = Math.round((queue.makespan / 180) * 100)
   document.querySelector("#recovery-progress").style.width = Math.min(100, utilization) + "%"
   document.querySelector("#recovery-utilization").textContent = utilization + "%"
+  document.querySelector("#recovery-error").textContent = currentEngineReply?.ok
+    ? ""
+    : "MoonBit validation: " + (currentEngineReply?.error ?? "analysis unavailable")
+  const bottleneck = currentEngineReply?.result?.bottleneck_resource
+  document.querySelector("#recovery-resources").innerHTML = [
+    ...new Set(state.assets.map((asset) => asset.owner)),
+  ]
+    .map((resource) =>
+      '<span><i class="status-dot ' +
+      (resource === bottleneck ? "amber" : "green") +
+      '"></i> ' +
+      escapeHtml(resource) +
+      "</span>",
+    )
+    .join("")
+  document.querySelector("#recovery-explanation").textContent = currentEngineReply?.ok
+    ? "MoonBit lower bound " +
+      currentEngineReply.result.lower_bound +
+      "m · busiest resource " +
+      (bottleneck ?? "none") +
+      " (" +
+      currentEngineReply.result.bottleneck_load +
+      "m work)."
+    : "Correct the input constraints to generate a schedule."
   document.querySelector("#recovery-table").innerHTML = queue.assets
     .map((asset, index) => {
       const level = assetImpactLevel(asset)
@@ -467,8 +488,8 @@ function buildEvidenceReport() {
     },
     {
       id: "dependencies",
-      label: "Dependency edges are mapped",
-      passed: state.assets.every((asset) => Array.isArray(asset.dependsOn)),
+      label: "Dependency graph validated by MoonBit",
+      passed: currentEngineReply?.ok === true,
     },
     {
       id: "drill",
@@ -492,21 +513,24 @@ function buildEvidenceReport() {
         (total, asset) => total + recoveryEstimate(asset),
         0,
       ),
+      recoveryMakespanMinutes: recovery.makespan,
       drillEventCount: drillEvents.length,
     },
     inventory: state.assets.map((asset) => ({ ...asset })),
     businessImpact: state.bia.map((record) => ({ ...record })),
     incidentImpact: state.assets.map((asset) => {
-      const impacts = dependentImpact(asset.id)
+      const analysis = evaluateWorkspace(asset.id)
+      const impacts = analysis.ok ? analysis.result.affected : []
       return {
         failedAsset: asset.id,
-        affectedAssets: impacts.map((item) => item.asset.id),
-        longestPath: impacts.reduce((max, item) => Math.max(max, item.depth), 0),
+        error: analysis.error ?? null,
+        affectedAssets: impacts.map((item) => item.asset_id),
+        longestPath: impacts.reduce((max, item) => Math.max(max, item.path.length - 1), 0),
         highestExposure:
           impacts.reduce(
             (level, item) =>
-              impactRank(assetImpactLevel(item.asset)) > impactRank(level)
-                ? assetImpactLevel(item.asset)
+              impactRank(assetImpactLevel(assetById(item.asset_id))) > impactRank(level)
+                ? assetImpactLevel(assetById(item.asset_id))
                 : level,
             "",
           ) || null,
@@ -514,10 +538,16 @@ function buildEvidenceReport() {
     }),
     recoveryPlan: {
       hasDependencyCycle: recovery.hasCycle,
+      error: currentEngineReply?.error ?? null,
+      makespanMinutes: recovery.makespan,
+      lowerBoundMinutes: currentEngineReply?.result?.lower_bound ?? null,
       orderedAssets: recovery.assets.map((asset, index) => ({
         order: index + 1,
         assetId: asset.id,
         estimateMinutes: recoveryEstimate(asset),
+        startMinutes: recovery.schedule[index].start,
+        finishMinutes: recovery.schedule[index].finish,
+        resource: recovery.schedule[index].resource,
         owner: asset.owner,
         priority: assetImpactLevel(asset),
       })),
@@ -827,8 +857,10 @@ document.querySelector("#primary-action").addEventListener("click", () => {
   else if (activeView === "bia") document.querySelector("#bia-service").focus()
   else if (activeView === "incident") {
     renderIncident()
+    renderRecovery()
     showToast("Impact simulation refreshed")
   } else if (activeView === "recovery") {
+    renderIncident()
     renderRecovery()
     showToast("Recovery order recalculated")
   } else if (activeView === "drills") {
@@ -914,12 +946,17 @@ document.querySelector("#bia-form").addEventListener("submit", (event) => {
   showToast("BIA assessment saved")
 })
 
-document.querySelector("#incident-asset").addEventListener("change", renderIncident)
+document.querySelector("#incident-asset").addEventListener("change", () => {
+  renderIncident()
+  renderRecovery()
+})
 document.querySelector("#simulate-incident").addEventListener("click", () => {
   renderIncident()
+  renderRecovery()
   showToast("Impact simulation refreshed")
 })
 document.querySelector("#recalculate-recovery").addEventListener("click", () => {
+  renderIncident()
   renderRecovery()
   showToast("Recovery order recalculated")
 })

@@ -1,0 +1,31 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "lllg123/continuity_forge/web/engine"
+
+import {
+  "moonbitlang/core/json",
+}
+
+// Values
+pub fn analyze_workspace(String) -> String
+
+// Errors
+type WebError
+
+// Types and methods
+type EngineReply derive(ToJson, @json.FromJson)
+
+type WebAlgorithm derive(ToJson, @json.FromJson)
+
+type WebAsset derive(@json.FromJson)
+
+type WebImpact derive(ToJson, @json.FromJson)
+
+type WebRequest derive(@json.FromJson)
+
+type WebResult derive(ToJson, @json.FromJson)
+
+type WebScheduleEntry derive(ToJson, @json.FromJson)
+
+// Type aliases
+
+// Traits

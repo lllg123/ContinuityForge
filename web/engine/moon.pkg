@@ -1,0 +1,11 @@
+import {
+  "moonbitlang/core/json",
+  "lllg123/continuity_forge",
+  "lllg123/continuity_forge/scheduling",
+}
+
+pkgtype(kind: "executable")
+
+options(
+  link: { "js": { "exports": [ "analyze_workspace" ], "format": "esm" } },
+)

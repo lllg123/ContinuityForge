@@ -47,7 +47,17 @@ python -m http.server 8765 --directory web
 5. 在 **Drill log** 中记录后续事件，确认审批和完成时间线。
 6. 点击 **Export evidence** 下载当前工作区的 JSON 证据包。
 
-浏览器工作区的数据保存在当前浏览器的 localStorage 中。演练和资产数据属于本地演示数据，不应替换为生产凭据或真实遥测。
+浏览器工作区的数据保存在当前浏览器的 localStorage 中。`web/engine.mjs` 是 `web/engine/` MoonBit 包编译的 ESM；页面把当前资产、依赖、恢复时长和资源传给该引擎。依赖校验、故障传播、三种基线和预算搜索都由 MoonBit 执行，恢复面板显示排程的实际 Makespan，证据 JSON 包含逐项起止时间。恢复时长仍是根据 BIA RTO 生成的演示输入估算，不能解释为真实生产测量。
+
+修改 MoonBit Web 引擎后，在仓库根目录更新静态产物：
+
+```text
+moon build web/engine --target js --release --deny-warn
+cp _build/js/release/build/web/engine/engine.js web/engine.mjs
+node integration/js/web-engine.mjs
+```
+
+Windows PowerShell 可用 `Copy-Item` 代替 `cp`。CI 会逐字比较构建结果和已提交的 `web/engine.mjs`，避免页面加载过期逻辑。演练和资产数据属于本地演示数据，不应替换为生产凭据或真实遥测。
 
 ## 发布前检查
 
