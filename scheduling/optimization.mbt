@@ -58,6 +58,8 @@ fn adaptive_order(
   problem : SchedulingProblem,
   remaining : Array[Int],
   loads : Array[Int],
+  critical_path_priority : Bool,
+  resource_load_awareness : Bool,
 ) -> Array[Int] {
   let selected : Array[Bool] = []
   for _ in problem.tasks {
@@ -81,13 +83,30 @@ fn adaptive_order(
               problem.constraints.resources,
               loads,
             )
-            if remaining[i] > remaining[current] ||
+            let contender_path = if critical_path_priority {
+              remaining[i]
+            } else {
+              0
+            }
+            let current_path = if critical_path_priority {
+              remaining[current]
+            } else {
+              0
+            }
+            let contender_load = if resource_load_awareness {
+              contender_load
+            } else {
+              0
+            }
+            let current_load = if resource_load_awareness {
+              current_load
+            } else {
+              0
+            }
+            if contender_path > current_path ||
+              (contender_path == current_path && contender_load > current_load) ||
               (
-                remaining[i] == remaining[current] &&
-                contender_load > current_load
-              ) ||
-              (
-                remaining[i] == remaining[current] &&
+                contender_path == current_path &&
                 contender_load == current_load &&
                 task.priority > problem.tasks[current].priority
               ) {
@@ -159,6 +178,20 @@ pub fn optimize_schedule(
   problem : SchedulingProblem,
   budget : Int,
 ) -> OptimizationReport raise SchedulingError {
+  optimize_schedule_with_features(problem, budget, true, true, true)
+}
+
+///|
+/// Experimental switches for a one-factor-at-a-time ablation. The three
+/// unchanged baselines remain eligible, so disabling a seed feature never
+/// removes the corresponding baseline from the safety fallback.
+pub fn optimize_schedule_with_features(
+  problem : SchedulingProblem,
+  budget : Int,
+  critical_path_priority : Bool,
+  resource_load_awareness : Bool,
+  local_search : Bool,
+) -> OptimizationReport raise SchedulingError {
   validate_problem(problem)
   if budget < 0 {
     raise SchedulingError::InvalidConstraint("search budget cannot be negative")
@@ -190,7 +223,9 @@ pub fn optimize_schedule(
   }
   let adaptive = decode_order(
     relaxed,
-    adaptive_order(relaxed, remaining, loads),
+    adaptive_order(
+      relaxed, remaining, loads, critical_path_priority, resource_load_awareness,
+    ),
     "adaptive-critical-path-load",
   )
   if adaptive.makespan < best.makespan {
@@ -201,7 +236,8 @@ pub fn optimize_schedule(
   let mut candidates_evaluated = 0
   let mut accepted_moves = 0
   let mut searching = true
-  while searching &&
+  while local_search &&
+        searching &&
         candidates_evaluated < budget &&
         best.makespan > lower_bound {
     searching = false

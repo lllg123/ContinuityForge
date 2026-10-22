@@ -37,6 +37,42 @@ test "zero budget returns a feasible seed without local moves" {
 }
 
 ///|
+test "ablation switches isolate seed features and local search" {
+  let p = problem(
+    [
+      ranked_task("a", 10, 3, "shared"),
+      ranked_task("b", 1, 0, "shared"),
+      ranked_task("c", 1, 3, "runner-c"),
+      ranked_task("d", 8, 0, "runner-d"),
+    ],
+    [edge("c", "a"), edge("d", "b")],
+    [resource("shared"), resource("runner-c"), resource("runner-d")],
+    None,
+  )
+  let full = try! @scheduling.optimize_schedule(p, 10)
+  let switched = try! @scheduling.optimize_schedule_with_features(
+    p, 10, true, true, true,
+  )
+  assert_eq(full.result.makespan, switched.result.makespan)
+  let no_search = try! @scheduling.optimize_schedule_with_features(
+    p, 10, true, true, false,
+  )
+  assert_eq(no_search.candidates_evaluated, 0)
+  assert_eq(no_search.accepted_moves, 0)
+  for
+    (critical, load, search) in [
+      (false, true, true),
+      (true, false, true),
+      (true, true, false),
+    ] {
+    let report = try! @scheduling.optimize_schedule_with_features(
+      p, 10, critical, load, search,
+    )
+    try! @scheduling.validate_schedule(p, report.result.schedule)
+  }
+}
+
+///|
 test "negative search budget is rejected" {
   let p = problem([], [], [], None)
   try @scheduling.optimize_schedule(p, -1) catch {

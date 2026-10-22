@@ -6735,7 +6735,7 @@ function _M0FP37lllg12317continuity__forge10scheduling23prerequisites__selected(
   }
   return true;
 }
-function _M0FP37lllg12317continuity__forge10scheduling15adaptive__order(problem, remaining, loads) {
+function _M0FP37lllg12317continuity__forge10scheduling15adaptive__order(problem, remaining, loads, critical_path_priority, resource_load_awareness) {
   const selected = [];
   const _bind = problem.tasks;
   const _bind$2 = _bind.length;
@@ -6774,7 +6774,11 @@ function _M0FP37lllg12317continuity__forge10scheduling15adaptive__order(problem,
               const _current = _Some;
               const contender_load = _M0FP37lllg12317continuity__forge10scheduling15load__for__task(task, problem.constraints.resources, loads);
               const current_load = _M0FP37lllg12317continuity__forge10scheduling15load__for__task(_M0MPC15array5Array2atGRPB4JsonE(problem.tasks, _current), problem.constraints.resources, loads);
-              if (_M0MPC15array5Array2atGiE(remaining, i) > _M0MPC15array5Array2atGiE(remaining, _current) || (_M0MPC15array5Array2atGiE(remaining, i) === _M0MPC15array5Array2atGiE(remaining, _current) && contender_load > current_load || _M0MPC15array5Array2atGiE(remaining, i) === _M0MPC15array5Array2atGiE(remaining, _current) && (contender_load === current_load && task.priority > _M0MPC15array5Array2atGRPB4JsonE(problem.tasks, _current).priority))) {
+              const contender_path = critical_path_priority ? _M0MPC15array5Array2atGiE(remaining, i) : 0;
+              const current_path = critical_path_priority ? _M0MPC15array5Array2atGiE(remaining, _current) : 0;
+              const contender_load$2 = resource_load_awareness ? contender_load : 0;
+              const current_load$2 = resource_load_awareness ? current_load : 0;
+              if (contender_path > current_path || (contender_path === current_path && contender_load$2 > current_load$2 || contender_path === current_path && (contender_load$2 === current_load$2 && task.priority > _M0MPC15array5Array2atGRPB4JsonE(problem.tasks, _current).priority))) {
                 chosen = i;
               }
             }
@@ -7722,7 +7726,7 @@ function _M0FP37lllg12317continuity__forge10scheduling13run__baseline(problem, b
   }
   return _M0FP37lllg12317continuity__forge10scheduling13decode__order(problem, selection_order, _M0FP37lllg12317continuity__forge10scheduling14baseline__name(baseline));
 }
-function _M0FP37lllg12317continuity__forge10scheduling18optimize__schedule(problem, budget) {
+function _M0FP37lllg12317continuity__forge10scheduling34optimize__schedule__with__features(problem, budget, critical_path_priority, resource_load_awareness, local_search) {
   const _bind = _M0FP37lllg12317continuity__forge10scheduling17validate__problem(problem);
   if (_bind.$tag === 1) {
     const _ok = _bind;
@@ -7825,7 +7829,7 @@ function _M0FP37lllg12317continuity__forge10scheduling18optimize__schedule(probl
       break;
     }
   }
-  const _bind$12 = _M0FP37lllg12317continuity__forge10scheduling13decode__order(relaxed, _M0FP37lllg12317continuity__forge10scheduling15adaptive__order(relaxed, _remaining, loads), "adaptive-critical-path-load");
+  const _bind$12 = _M0FP37lllg12317continuity__forge10scheduling13decode__order(relaxed, _M0FP37lllg12317continuity__forge10scheduling15adaptive__order(relaxed, _remaining, loads, critical_path_priority, resource_load_awareness), "adaptive-critical-path-load");
   let adaptive;
   if (_bind$12.$tag === 1) {
     const _ok = _bind$12;
@@ -7842,7 +7846,7 @@ function _M0FP37lllg12317continuity__forge10scheduling18optimize__schedule(probl
   let accepted_moves = 0;
   let searching = true;
   while (true) {
-    if (searching && (candidates_evaluated < budget && best.makespan > lower_bound)) {
+    if (local_search && (searching && (candidates_evaluated < budget && best.makespan > lower_bound))) {
       searching = false;
       const _bind$13 = current_order.length - 1 | 0;
       let _tmp$4 = 0;
@@ -7895,6 +7899,9 @@ function _M0FP37lllg12317continuity__forge10scheduling18optimize__schedule(probl
     return _bind$13;
   }
   return new _M0DTPC16result6ResultGRP37lllg12317continuity__forge10scheduling18OptimizationReportRP37lllg12317continuity__forge10scheduling15SchedulingErrorE2Ok(new _M0TP37lllg12317continuity__forge10scheduling18OptimizationReport(best_baseline_makespan, initial_makespan, lower_bound, result, candidates_evaluated, accepted_moves, budget));
+}
+function _M0FP37lllg12317continuity__forge10scheduling18optimize__schedule(problem, budget) {
+  return _M0FP37lllg12317continuity__forge10scheduling34optimize__schedule__with__features(problem, budget, true, true, true);
 }
 function _M0MP37lllg12317continuity__forge10scheduling4Task3new(id, duration, priority, resource_id) {
   if (id === "") {

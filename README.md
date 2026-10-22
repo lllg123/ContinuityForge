@@ -118,7 +118,9 @@ python -m http.server 8765 --directory web
 
 ### 复现算法对比
 
-运行 `moon test benchmark/runner` 验证固定种子实例和指标边界；再按 [benchmark/README.md](benchmark/README.md) 的命令生成逐次 CSV/JSON、汇总 CSV 与两张 SVG 图表。覆盖 12–20、50–100、200 个任务的 Small、Medium、Large 案例，并额外用 6 个任务的实例验证已证明最优解的差距。数据均为合成输入，执行时间是本机测量值。
+运行 `moon test benchmark/runner` 验证固定种子实例和指标边界；再按 [benchmark/README.md](benchmark/README.md) 的命令生成逐次 CSV/JSON、汇总 CSV、消融数据与两张 SVG 图表。覆盖 12–20、50–100、200 个任务的 Small、Medium、Large 案例，并额外用 6 个任务的实例验证已证明最优解的差距。数据均为合成输入，执行时间是本机测量值。
+
+实验结果和无收益机制见 [基准与消融报告](docs/benchmark-report.md)。[算法设计](docs/algorithm-design.md)说明数学模型、恢复窗口和局部搜索的实际职责；[公开需求证据](docs/requirements-evidence.md)区分问题背景与尚缺的真实用户验证。[架构设计](docs/architecture.md)与 [English overview](docs/overview.en.md)概述跨场景调用和兼容边界。
 
 ## 本地验证
 

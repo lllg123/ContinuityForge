@@ -1,0 +1,7 @@
+# ContinuityForge: project overview
+
+ContinuityForge is a MoonBit prototype for business continuity analysis and resource-constrained task scheduling. It models services, components and dependencies; estimates incident impact; records recovery playbooks and drill evidence; and schedules recovery or CI pipeline tasks through one domain-independent core. The static Web workspace calls a compiled MoonBit ESM module for domain validation and scheduling. It does not operate production systems.
+
+Tasks have integer durations, prerequisite edges and one exclusive resource each. Three deterministic scheduling baselines and a budgeted local search produce candidate schedules; a separate validator checks precedence and resource feasibility. The current optimizer is heuristic. Only small, fully enumerated cases have an optimality certificate. The checked-in benchmark uses synthetic fixed-seed data, and no production deployment or external user validation is claimed.
+
+Start with the [Chinese README](../README.md) for installation, a runnable domain example and the Web demo. See the [architecture](architecture.md), [algorithm and mathematical model](algorithm-design.md), [reproducible benchmark](benchmark-report.md), [public evidence and validation limits](requirements-evidence.md), [scenario adapters](scenario-adapters.md), and [v1 Web JSON schema](../web/scenarios/schema.v1.json). The old recovery API remains available; the new scheduler is accessed through scenario adapters or the Web engine.

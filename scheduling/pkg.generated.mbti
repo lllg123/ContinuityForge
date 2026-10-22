@@ -12,6 +12,8 @@ pub fn optimality_gap_percent(AnalysisResult, ExactReference) -> Double raise Sc
 
 pub fn optimize_schedule(SchedulingProblem, Int) -> OptimizationReport raise SchedulingError
 
+pub fn optimize_schedule_with_features(SchedulingProblem, Int, Bool, Bool, Bool) -> OptimizationReport raise SchedulingError
+
 pub fn run_baseline(SchedulingProblem, Baseline) -> AnalysisResult raise SchedulingError
 
 pub fn validate_problem(SchedulingProblem) -> Unit raise SchedulingError

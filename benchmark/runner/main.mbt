@@ -263,6 +263,170 @@ fn run_cases() -> Array[Row] raise {
 }
 
 ///|
+struct AblationRow {
+  case_name : String
+  seed : Int
+  variant : String
+  makespan : Int
+  full_makespan : Int
+  feasible : Bool
+}
+
+///|
+fn run_ablation() -> Array[AblationRow] raise {
+  let rows : Array[AblationRow] = []
+  for config in cases() {
+    for repeat in 0..<3 {
+      let seed = 20261021 + repeat * 1009
+      let problem = make_problem(config, seed)
+      let full = @scheduling.optimize_schedule(problem, 10).result.makespan
+      for
+        variant in [
+          "full", "no-critical-path", "no-resource-load", "no-local-search",
+        ] {
+        let critical = variant != "no-critical-path"
+        let load = variant != "no-resource-load"
+        let search = variant != "no-local-search"
+        let result = @scheduling.optimize_schedule_with_features(
+            problem, 10, critical, load, search,
+          ).result
+        let feasible = try {
+          @scheduling.validate_schedule(problem, result.schedule)
+          true
+        } catch {
+          _ => false
+        }
+        rows.push({
+          case_name: config.name,
+          seed,
+          variant,
+          makespan: result.makespan,
+          full_makespan: full,
+          feasible,
+        })
+      }
+    }
+  }
+  let trap = local_order_trap()
+  let trap_full = @scheduling.optimize_schedule(trap, 10).result.makespan
+  for
+    variant in [
+      "full", "no-critical-path", "no-resource-load", "no-local-search",
+    ] {
+    let result = @scheduling.optimize_schedule_with_features(
+        trap,
+        10,
+        variant != "no-critical-path",
+        variant != "no-resource-load",
+        variant != "no-local-search",
+      ).result
+    let feasible = try {
+      @scheduling.validate_schedule(trap, result.schedule)
+      true
+    } catch {
+      _ => false
+    }
+    rows.push({
+      case_name: "local-order-trap",
+      seed: 0,
+      variant,
+      makespan: result.makespan,
+      full_makespan: trap_full,
+      feasible,
+    })
+  }
+  rows
+}
+
+///|
+fn local_order_trap() -> @scheduling.SchedulingProblem raise {
+  @scheduling.SchedulingProblem::new(
+    tasks=[
+      @scheduling.Task::new(
+        id="a",
+        duration=10,
+        priority=3,
+        resource_id="shared",
+      ),
+      @scheduling.Task::new(
+        id="b",
+        duration=1,
+        priority=0,
+        resource_id="shared",
+      ),
+      @scheduling.Task::new(
+        id="c",
+        duration=1,
+        priority=3,
+        resource_id="runner-c",
+      ),
+      @scheduling.Task::new(
+        id="d",
+        duration=8,
+        priority=0,
+        resource_id="runner-d",
+      ),
+    ],
+    dependencies=[
+      @scheduling.Dependency::new(task_id="c", prerequisite_id="a"),
+      @scheduling.Dependency::new(task_id="d", prerequisite_id="b"),
+    ],
+    constraints=@scheduling.Constraints::new(
+      resources=[
+        @scheduling.Resource::new(id="shared"),
+        @scheduling.Resource::new(id="runner-c"),
+        @scheduling.Resource::new(id="runner-d"),
+      ],
+      target_makespan=None,
+    ),
+  )
+}
+
+///|
+fn ablation_csv(rows : Array[AblationRow]) -> Unit {
+  println("case,seed,variant,makespan,full_makespan,delta_from_full,feasible")
+  for row in rows {
+    println(
+      "\{row.case_name},\{row.seed},\{row.variant},\{row.makespan},\{row.full_makespan},\{row.makespan - row.full_makespan},\{row.feasible}",
+    )
+  }
+}
+
+///|
+fn ablation_summary(rows : Array[AblationRow]) -> Unit {
+  println(
+    "case,variant,observations,feasible_count,mean_makespan,mean_delta_from_full",
+  )
+  for
+    case_name in [
+      "micro", "small-12", "small-20", "medium-50", "medium-100", "large-200", "local-order-trap",
+    ] {
+    for
+      variant in [
+        "full", "no-critical-path", "no-resource-load", "no-local-search",
+      ] {
+      let mut count = 0
+      let mut feasible = 0
+      let mut makespan_sum = 0
+      let mut delta_sum = 0
+      for row in rows {
+        if row.case_name == case_name && row.variant == variant {
+          count = count + 1
+          if row.feasible {
+            feasible = feasible + 1
+          }
+          makespan_sum = makespan_sum + row.makespan
+          delta_sum = delta_sum + row.makespan - row.full_makespan
+        }
+      }
+      println(
+        "\{case_name},\{variant},\{count},\{feasible},\{makespan_sum.to_double() / count.to_double()},\{delta_sum.to_double() / count.to_double()}",
+      )
+    }
+  }
+}
+
+///|
 fn gap_text(gap : Double?) -> String {
   match gap {
     Some(value) => "\{value}"
@@ -412,6 +576,15 @@ fn summary(rows : Array[Row]) -> Unit {
 fn main raise {
   let args = @env.args()
   let mode = if args.length() <= 2 { "csv" } else { args[args.length() - 1] }
+  if mode == "ablation-csv" || mode == "ablation-summary" {
+    let rows = run_ablation()
+    if mode == "ablation-csv" {
+      ablation_csv(rows)
+    } else {
+      ablation_summary(rows)
+    }
+    return
+  }
   if mode != "csv" &&
     mode != "json" &&
     mode != "svg" &&
