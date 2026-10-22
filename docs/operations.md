@@ -44,8 +44,9 @@ python -m http.server 8765 --directory web
 2. 在 **Business impact** 中填写影响分数、RTO、RPO 和最大可容忍中断时间。
 3. 在 **Incident impact** 中选择 `postgres-primary`，检查两级依赖传播结果。
 4. 在 **Recovery plans** 中检查依赖感知的恢复顺序和资源窗口。
-5. 在 **Drill log** 中记录后续事件，确认审批和完成时间线。
-6. 点击 **Export evidence** 下载当前工作区的 JSON 证据包。
+5. 在 **Scheduling lab** 中切换故障恢复与 CI/CD 场景，比较三种基线和预算搜索的依赖图、甘特图与工期，也可按 [调度工作区说明](scheduling-workspace.md)导入版本化 JSON 并导出排程结果。
+6. 在 **Drill log** 中记录后续事件，确认审批和完成时间线。
+7. 点击 **Export evidence** 下载当前工作区的 JSON 证据包。
 
 浏览器工作区的数据保存在当前浏览器的 localStorage 中。`web/engine.mjs` 是 `web/engine/` MoonBit 包编译的 ESM；页面把当前资产、依赖、恢复时长和资源传给该引擎。依赖校验、故障传播、三种基线和预算搜索都由 MoonBit 执行，恢复面板显示排程的实际 Makespan，证据 JSON 包含逐项起止时间。恢复时长仍是根据 BIA RTO 生成的演示输入估算，不能解释为真实生产测量。
 

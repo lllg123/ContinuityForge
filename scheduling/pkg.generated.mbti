@@ -2,6 +2,8 @@
 package "lllg123/continuity_forge/scheduling"
 
 // Values
+pub fn critical_path(SchedulingProblem) -> CriticalPathSummary raise SchedulingError
+
 pub fn evaluate_schedule(problem~ : SchedulingProblem, schedule~ : Array[ScheduleEntry], algorithm~ : String) -> AnalysisResult raise SchedulingError
 
 pub fn exact_reference(SchedulingProblem, Int) -> ExactReference raise SchedulingError
@@ -43,6 +45,11 @@ pub(all) struct Constraints {
   target_makespan : Int?
 }
 pub fn Constraints::new(resources~ : Array[Resource], target_makespan~ : Int?) -> Self raise SchedulingError
+
+pub(all) struct CriticalPathSummary {
+  task_ids : Array[String]
+  duration : Int
+}
 
 pub(all) struct Dependency {
   task_id : String

@@ -106,7 +106,7 @@ moon run examples/minimal
 python -m http.server 8765 --directory web
 ```
 
-打开 `http://127.0.0.1:8765/`，依次使用 Inventory、Business impact、Incident impact、Recovery plans 和 Drill log；最后点击 **Export evidence** 下载证据 JSON。故障传播、依赖校验及恢复排程由随仓库发布的 MoonBit JavaScript 引擎计算；输入非法时页面显示引擎错误。完整操作说明见 [docs/operations.md](docs/operations.md)。
+打开 `http://127.0.0.1:8765/`，依次使用 Inventory、Business impact、Incident impact、Recovery plans、Scheduling lab 和 Drill log；最后点击 **Export evidence** 下载证据 JSON。故障传播、依赖校验及恢复排程由随仓库发布的 MoonBit JavaScript 引擎计算；输入非法时页面显示引擎错误。Scheduling lab 支持两个预置场景、版本化 JSON 导入、依赖图、甘特图、算法对比和 JSON/CSV 导出，操作方式见 [docs/scheduling-workspace.md](docs/scheduling-workspace.md)。完整工作区说明见 [docs/operations.md](docs/operations.md)。
 
 ### 验证资源受限恢复窗口
 

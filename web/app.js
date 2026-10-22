@@ -1,4 +1,5 @@
 import { analyze_workspace } from "./engine.mjs"
+import { initSchedulingWorkspace } from "./scheduling.js"
 
 const STORAGE_KEY = "continuityforge-web-v1"
 
@@ -102,6 +103,7 @@ const copyDefaultState = () => ({
 let state = loadState()
 let toastTimer
 let currentEngineReply
+let schedulingController
 
 function loadState() {
   try {
@@ -778,6 +780,7 @@ function showToast(message, tone = "success") {
 }
 
 function switchView(view) {
+  document.querySelector(".metric-grid").classList.toggle("hidden", view === "scheduling")
   document.querySelectorAll("[data-view-target]").forEach((button) => {
     button.classList.toggle("active", button.dataset.viewTarget === view)
   })
@@ -813,6 +816,13 @@ function switchView(view) {
       title: "Put the next recovery action first.",
       description: "Use BIA scores and dependency order to keep the recovery window visible.",
       action: "<span>↻</span> Recalculate",
+    },
+    scheduling: {
+      breadcrumb: "Scheduling lab",
+      kicker: "MOONBIT SCHEDULING",
+      title: "See the plan behind the deadline.",
+      description: "Compare dependency and resource constrained schedules on the same input.",
+      action: "<span>↻</span> Run analysis",
     },
     drills: {
       breadcrumb: "Drill log",
@@ -863,6 +873,8 @@ document.querySelector("#primary-action").addEventListener("click", () => {
     renderIncident()
     renderRecovery()
     showToast("Recovery order recalculated")
+  } else if (activeView === "scheduling") {
+    schedulingController?.run()
   } else if (activeView === "drills") {
     recordNextDrillEvent()
   }
@@ -978,3 +990,5 @@ function recordNextDrillEvent() {
 document.querySelector("#record-drill-event").addEventListener("click", recordNextDrillEvent)
 
 renderAll()
+schedulingController = initSchedulingWorkspace({ analyze_workspace, escapeHtml, showToast })
+if (window.location.hash === "#scheduling") switchView("scheduling")

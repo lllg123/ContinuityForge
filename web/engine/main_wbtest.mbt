@@ -15,6 +15,9 @@ test "web JSON bridge uses domain impact and shared scheduling core" {
   assert_eq(result.baselines.length(), 3)
   assert_eq(result.optimized.makespan, 45)
   assert_eq(result.lower_bound, 45)
+  assert_eq(result.critical_path, ["db", "api", "worker"])
+  assert_eq(result.critical_path_duration, 45)
+  assert_true(result.optimized.elapsed_ms >= 0)
   assert_true(result.target_met)
   assert_eq(result.bottleneck_load, 35)
 }

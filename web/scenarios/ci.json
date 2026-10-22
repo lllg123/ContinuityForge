@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.0",
+  "name": "CI/CD Scheduling Demo",
+  "dataKind": "synthetic",
+  "timeUnit": "minutes",
+  "targetWindow": 40,
+  "searchBudget": 100,
+  "failedTaskId": "",
+  "tasks": [
+    { "id": "lint", "label": "Lint", "assetType": "Component", "duration": 5, "resource": "linux-a", "priority": 1, "dependsOn": [] },
+    { "id": "compile-api", "label": "Compile API", "assetType": "Component", "duration": 12, "resource": "linux-a", "priority": 3, "dependsOn": [] },
+    { "id": "compile-web", "label": "Compile Web", "assetType": "Component", "duration": 9, "resource": "linux-b", "priority": 2, "dependsOn": [] },
+    { "id": "unit-api", "label": "API unit tests", "assetType": "Component", "duration": 8, "resource": "linux-a", "priority": 2, "dependsOn": ["compile-api"] },
+    { "id": "unit-web", "label": "Web unit tests", "assetType": "Component", "duration": 7, "resource": "linux-b", "priority": 2, "dependsOn": ["compile-web"] },
+    { "id": "integration", "label": "Integration tests", "assetType": "Component", "duration": 11, "resource": "linux-c", "priority": 3, "dependsOn": ["unit-api", "unit-web"] },
+    { "id": "package", "label": "Package", "assetType": "Component", "duration": 4, "resource": "linux-a", "priority": 1, "dependsOn": ["integration", "lint"] }
+  ]
+}

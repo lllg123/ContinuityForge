@@ -59,6 +59,7 @@ jobs:
           moon build web/engine --target js --release --deny-warn
           cmp _build/js/release/build/web/engine/engine.js web/engine.mjs
           node integration/js/web-engine.mjs
+          node integration/js/scheduling-workspace.mjs
 
       - name: Run minimal domain example
         run: moon run examples/minimal
@@ -73,4 +74,6 @@ jobs:
         run: node integration/js/smoke.mjs
 
       - name: Check Web JavaScript syntax
-        run: node --check web/app.js
+        run: |
+          node --check web/app.js
+          node --check web/scheduling.js

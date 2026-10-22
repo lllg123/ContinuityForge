@@ -52,6 +52,10 @@
             <span>Recovery plans</span>
             <span class="nav-count" id="nav-recovery-count">3</span>
           </button>
+          <button class="nav-item" type="button" data-view-target="scheduling">
+            <span class="nav-icon">▤</span>
+            <span>Scheduling lab</span>
+          </button>
           <button class="nav-item" type="button" data-view-target="drills">
             <span class="nav-icon">◎</span>
             <span>Drill log</span>
@@ -400,6 +404,60 @@
               <span class="eyebrow constraint-eyebrow">AVAILABLE RESOURCES</span>
               <div class="resource-list" id="recovery-resources"></div>
               <p class="path-copy" id="recovery-explanation">The MoonBit engine schedules current assets on exclusive owner resources.</p>
+            </aside>
+          </div>
+        </section>
+
+        <section class="workspace-view" id="scheduling-view" data-view="scheduling">
+          <div class="section-toolbar">
+            <div>
+              <h2>Scheduling lab</h2>
+              <p>Compare real MoonBit schedules for the same task and resource inputs.</p>
+            </div>
+            <button class="button button-primary" id="schedule-run" type="button"><span>↻</span> Run analysis</button>
+          </div>
+          <div class="panel schedule-controls">
+            <label class="field"><span>Scenario</span>
+              <select id="schedule-scenario">
+                <option value="incident">Incident Recovery Demo</option>
+                <option value="ci">CI/CD Scheduling Demo</option>
+                <option value="custom">Imported scenario</option>
+              </select>
+            </label>
+            <label class="field"><span>Import versioned JSON</span><input id="schedule-import" type="file" accept=".json,application/json" /></label>
+            <label class="field"><span>View algorithm</span>
+              <select id="schedule-algorithm">
+                <option value="budgeted-search">Budgeted search</option>
+                <option value="stable-topological">Stable topological</option>
+                <option value="recovery-heuristic">Recovery heuristic</option>
+                <option value="critical-path">Critical path</option>
+              </select>
+            </label>
+            <div class="schedule-export-actions">
+              <button class="button button-quiet" id="schedule-export-json" type="button">Export JSON</button>
+              <button class="button button-quiet" id="schedule-export-csv" type="button">Export CSV</button>
+            </div>
+          </div>
+          <p class="schedule-error" id="schedule-error" role="alert"></p>
+          <div class="schedule-summary" id="schedule-summary"></div>
+          <div class="schedule-panels">
+            <section class="panel schedule-panel">
+              <div class="panel-header"><div><span class="eyebrow">DEPENDENCIES</span><h3>Task graph</h3></div></div>
+              <div class="schedule-scroll" id="schedule-graph"></div>
+            </section>
+            <section class="panel schedule-panel">
+              <div class="panel-header"><div><span class="eyebrow">EXECUTION</span><h3>Resource timeline</h3></div></div>
+              <div class="schedule-scroll" id="schedule-gantt"></div>
+            </section>
+          </div>
+          <div class="schedule-panels">
+            <section class="panel schedule-panel">
+              <div class="panel-header"><div><span class="eyebrow">ALGORITHMS</span><h3>Same input, four policies</h3></div></div>
+              <div class="table-wrap"><table><thead><tr><th>Algorithm</th><th>Makespan</th><th>Runtime</th><th>vs. stable</th></tr></thead><tbody id="schedule-comparison"></tbody></table></div>
+            </section>
+            <aside class="panel schedule-panel">
+              <div class="panel-header"><div><span class="eyebrow">EXPLANATION</span><h3>Bounds &amp; bottlenecks</h3></div></div>
+              <div id="schedule-explanation" class="schedule-explanation"></div>
             </aside>
           </div>
         </section>

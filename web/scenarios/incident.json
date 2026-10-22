@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1.0",
+  "name": "Incident Recovery Demo",
+  "dataKind": "synthetic",
+  "timeUnit": "minutes",
+  "targetWindow": 45,
+  "searchBudget": 50,
+  "failedTaskId": "postgres-primary",
+  "tasks": [
+    { "id": "postgres-primary", "label": "Restore database", "assetType": "Component", "duration": 10, "resource": "database-team", "priority": 4, "dependsOn": [] },
+    { "id": "checkout-api", "label": "Restore checkout API", "assetType": "Service", "duration": 20, "resource": "compute-team", "priority": 3, "dependsOn": ["postgres-primary"] },
+    { "id": "checkout-worker", "label": "Restore worker", "assetType": "Service", "duration": 15, "resource": "compute-team", "priority": 2, "dependsOn": [] },
+    { "id": "edge-router", "label": "Restore edge router", "assetType": "Component", "duration": 25, "resource": "network-team", "priority": 1, "dependsOn": [] }
+  ]
+}

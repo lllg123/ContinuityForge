@@ -1564,6 +1564,190 @@ tbody tr:hover {
   font-size: 10px;
 }
 
+.schedule-controls {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(200px, 1.3fr) minmax(160px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 18px;
+}
+
+.schedule-controls .field {
+  margin: 0;
+}
+
+.schedule-controls input[type="file"] {
+  padding: 7px;
+}
+
+.schedule-export-actions {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 1px;
+}
+
+.schedule-error {
+  margin: 12px 0;
+  color: var(--red);
+  font-size: 12px;
+}
+
+.schedule-error:empty {
+  display: none;
+}
+
+.schedule-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 15px 0;
+}
+
+.schedule-stat {
+  display: grid;
+  gap: 6px;
+  padding: 17px 18px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface);
+}
+
+.schedule-stat span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.schedule-stat strong {
+  color: var(--navy);
+  font-size: 20px;
+}
+
+.schedule-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.schedule-panel {
+  min-width: 0;
+}
+
+.schedule-scroll {
+  overflow-x: auto;
+  padding: 15px 18px 20px;
+}
+
+.dependency-svg {
+  display: block;
+  max-width: none;
+}
+
+.graph-edge {
+  fill: none;
+  stroke: #a7b6cb;
+  stroke-width: 2;
+}
+
+.graph-edge.critical {
+  stroke: var(--red);
+  stroke-width: 3;
+}
+
+.graph-node rect {
+  fill: var(--blue-soft);
+  stroke: #bfd0f5;
+}
+
+.graph-node.critical rect {
+  fill: var(--red-soft);
+  stroke: #e9a3a8;
+}
+
+.graph-node text {
+  fill: var(--ink);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.graph-node .graph-subtitle {
+  fill: var(--muted);
+  font-size: 9px;
+  font-weight: 450;
+}
+
+.gantt-axis,
+.gantt-row {
+  display: grid;
+  grid-template-columns: 95px minmax(335px, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 460px;
+}
+
+.gantt-axis > div {
+  position: relative;
+  height: 24px;
+  color: var(--subtle);
+  font-size: 9px;
+}
+
+.gantt-axis > div span {
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.gantt-row {
+  margin: 7px 0;
+}
+
+.gantt-row > strong {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gantt-track {
+  position: relative;
+  height: 35px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: repeating-linear-gradient(90deg, #fff 0, #fff calc(25% - 1px), #eef1f5 calc(25% - 1px), #eef1f5 25%);
+}
+
+.gantt-bar {
+  position: absolute;
+  top: 5px;
+  height: 24px;
+  overflow: hidden;
+  padding: 5px 6px;
+  border-radius: 5px;
+  color: white;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #5c84d8;
+}
+
+.gantt-bar.resource-1 { background: #43a787; }
+.gantt-bar.resource-2 { background: #a884d4; }
+.gantt-bar.resource-3 { background: #d6984b; }
+.gantt-bar.critical { outline: 2px solid #dc6b74; outline-offset: 1px; }
+
+#schedule-comparison tr.selected { background: var(--blue-soft); }
+
+.schedule-explanation {
+  padding: 15px 20px 20px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.schedule-explanation strong { color: var(--navy); }
+.schedule-note { color: var(--subtle); }
+
 @media (max-width: 790px) {
   .incident-grid,
   .recovery-grid,
@@ -1573,6 +1757,15 @@ tbody tr:hover {
 
   .scenario-select {
     margin-top: 12px;
+  }
+
+  .schedule-controls,
+  .schedule-panels {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .schedule-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

@@ -34,6 +34,7 @@ struct WebScheduleEntry {
 struct WebAlgorithm {
   name : String
   makespan : Int
+  elapsed_ms : Int
   schedule : Array[WebScheduleEntry]
 } derive(FromJson, ToJson)
 
@@ -44,6 +45,8 @@ struct WebResult {
   baselines : Array[WebAlgorithm]
   optimized : WebAlgorithm
   lower_bound : Int
+  critical_path : Array[String]
+  critical_path_duration : Int
   target_met : Bool
   bottleneck_resource : String?
   bottleneck_load : Int
@@ -88,6 +91,7 @@ fn ref_id(asset : @continuity_forge.AssetRef) -> String {
 fn web_algorithm(
   result : @scheduling.AnalysisResult,
   name : String,
+  elapsed_ms : Int,
 ) -> WebAlgorithm {
   let schedule : Array[WebScheduleEntry] = []
   for entry in result.schedule {
@@ -98,7 +102,7 @@ fn web_algorithm(
       finish: entry.finish,
     })
   }
-  { name, makespan: result.makespan, schedule, }
+  { name, makespan: result.makespan, elapsed_ms, schedule, }
 }
 
 ///|
@@ -208,13 +212,23 @@ fn compute(request : WebRequest) -> WebResult raise {
       @scheduling.Baseline::RecoveryHeuristic,
       @scheduling.Baseline::CriticalPath,
     ] {
+    let started = @env.now()
     let result = @scheduling.run_baseline(problem, baseline)
-    baselines.push(web_algorithm(result, result.explanation.algorithm))
+    baselines.push(
+      web_algorithm(
+        result,
+        result.explanation.algorithm,
+        (@env.now() - started).to_int(),
+      ),
+    )
   }
+  let started = @env.now()
   let optimization = @scheduling.optimize_schedule(
     problem,
     request.search_budget,
   )
+  let optimized_elapsed_ms = (@env.now() - started).to_int()
+  let critical_path = @scheduling.critical_path(problem)
   let mut bottleneck_resource : String? = None
   let mut bottleneck_load = 0
   for resource in resources {
@@ -233,8 +247,14 @@ fn compute(request : WebRequest) -> WebResult raise {
     dependency_order,
     affected,
     baselines,
-    optimized: web_algorithm(optimization.result, "budgeted-search"),
+    optimized: web_algorithm(
+      optimization.result,
+      "budgeted-search",
+      optimized_elapsed_ms,
+    ),
     lower_bound: optimization.lower_bound,
+    critical_path: critical_path.task_ids,
+    critical_path_duration: critical_path.duration,
     target_met: optimization.result.makespan <= request.target_window,
     bottleneck_resource,
     bottleneck_load,
