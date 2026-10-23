@@ -1,0 +1,25 @@
+{
+  "dataset": "PSPLIB single-mode RCPSP",
+  "source_page": "https://www.om-db.wi.tum.de/psplib/getdata.php?mode=sm",
+  "sets": {
+    "j30": {
+      "archive_url": "https://www.om-db.wi.tum.de/psplib/download_dataset.php?format=zip&mode=sm&set=j30",
+      "archive_sha256": "acd65524b95108a7ba08c1e512ffc6d028e9ba86a2a898b4462f71953e0f8467",
+      "metadata_url": "https://www.om-db.wi.tum.de/psplib/download_merged.php?mode=sm&set=j30",
+      "metadata_sha256": "8f2c005cdf81bf0c962e2930c9c241ed327ba832202ff579d953c4e93f39029e"
+    },
+    "j60": {
+      "archive_url": "https://www.om-db.wi.tum.de/psplib/download_dataset.php?format=zip&mode=sm&set=j60",
+      "archive_sha256": "bdb4e04c7ea3991d95180dda9d8cb2d5498a5770f5b546515d65c9a932594eab",
+      "metadata_url": "https://www.om-db.wi.tum.de/psplib/download_merged.php?mode=sm&set=j60",
+      "metadata_sha256": "86618b67db74b6424296b4359b353f08f25a9d3690a7231b117a00a006c8ff0f"
+    }
+  },
+  "instances": [
+    {"set": "j30", "id": "j301_1.sm", "parameter": 1, "instance": 1, "official_optimal": 43, "official_lower_bound": 43, "official_upper_bound": 43},
+    {"set": "j30", "id": "j309_1.sm", "parameter": 9, "instance": 1, "official_optimal": 83, "official_lower_bound": 83, "official_upper_bound": 83},
+    {"set": "j30", "id": "j3013_1.sm", "parameter": 13, "instance": 1, "official_optimal": 58, "official_lower_bound": 58, "official_upper_bound": 58},
+    {"set": "j60", "id": "j601_1.sm", "parameter": 1, "instance": 1, "official_optimal": 77, "official_lower_bound": 77, "official_upper_bound": 77},
+    {"set": "j60", "id": "j609_1.sm", "parameter": 9, "instance": 1, "official_optimal": null, "official_lower_bound": 82, "official_upper_bound": 87}
+  ]
+}

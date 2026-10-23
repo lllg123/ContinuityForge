@@ -9,7 +9,7 @@
 | M2 独立验证器 | 已完成核心实现 | `inspect_rcpsp_schedule` 给出结构化违规，检查全部声明约束；`rcpsp_validation_test.mbt` 含超量、时窗、半开区间等反例。 | M4 导入求解器结果也接入同一验证器。 |
 | M3 扩展启发式 | 已实现，待公开基准评价 | `solve_rcpsp` 三种排序、`optimize_rcpsp` 有预算的相邻交换；全部候选独立验证，报告次数与耗时；89 项测试四后端通过。 | M5/M6 比较大规模与竞争强度。 |
 | M4 成熟求解器对照 | 三个自制场景已联调，待 PSPLIB 对照 | OR-Tools 9.15.6755 读同一 v2 JSON，按 CP-SAT interval/cumulative 建模，输出状态和界；三个结果由 MoonBit 独立验证。见[参照说明](ortools-reference.md)。 | M5 公开实例的结果也通过相同导入验证。 |
-| M5 PSPLIB 公开基准 | 未开始 | 旧基准全为合成实例。 | 官方 J30 子集、无损转换、来源与许可记录。 |
+| M5 PSPLIB 公开基准 | 五个固定公开实例已转换验证 | [PSPLIB 说明](../benchmark/psplib/README.md)记录官方 J30/J60 来源、SHA-256、实例 ID、最优/界；转换器解析全部 960 个原文件，五个选定实例经 MoonBit 可行排程。原始数据不提交。 | M6 全算法同集实验、失败记录。 |
 | M6 系统性实验 | 未开始 | 旧模型已有基准和消融。 | 新模型原始结果、图、失败实例及界的解释。 |
 | M7 可复用 API/Schema | v2 导入导出与求解接口已实现，待失败案例完善 | v2 JSON Schema、MoonBit 导入导出和外部结果验证，保留旧 API/Web v1。见[交换格式](rcpsp-exchange.md)。 | 增加完整结果分析和版本迁移实例。 |
 | M8 三场景验收 | 三个可运行输入已建立，待失败例与说明 | CI、恢复、通用项目三个规范化 JSON 均经 MoonBit 和 CP-SAT 求解验证。 | 加入容量/截止反例及场景验收文档。 |
