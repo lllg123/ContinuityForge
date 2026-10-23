@@ -1,12 +1,12 @@
 # ContinuityForge
 
-ContinuityForge 是一个面向组织内部的系统韧性与业务连续性平台。它帮助团队登记关键业务和技术依赖，完成业务影响分析（BIA），模拟故障影响，生成恢复顺序，记录演练过程，并导出可追溯报告。
+ContinuityForge 的核心是 **MoonBit 单模式资源受限项目调度（RCPSP）库**：对有依赖、固定工期、多个同时占用的可再生资源、最早开工与硬截止的任务，生成、验证并分析可行排程。系统韧性、业务连续性和 CI/CD 是同一调度核心的应用场景；现有 Web 工作区还提供资产登记、业务影响分析（BIA）、故障影响传播、恢复预案、演练审计与证据导出。
 
 项目地址：<https://github.com/lllg123/ContinuityForge>
 
 ## 当前阶段
 
-当前仓库已建立 MoonBit 模块、JavaScript 目标验证入口、经过统一 API façade 校验的依赖图、业务影响分析（BIA）、故障影响传播、约束下恢复排序、恢复预案、演练审计时间线、项目与审计记录存储、本地用户权限，以及包含故障影响、恢复排序、演练时间线可视化和证据 JSON 导出的 Web 工作区。服务端接口和更完整的 Web 流程会在后续独立提交中逐步加入。
+`scheduling/` 已提供独立于业务场景的 RCPSP v2 模型、结构化违规报告、独立可行性验证器、三种确定性基线和预算局部搜索。v2 输入/输出有版本化 JSON Schema；同一输入可交给固定版本 OR-Tools CP-SAT 独立对照，再把解送回 MoonBit 验证。仓库提交了三个可运行教学场景、PSPLIB J30/J60 的无损转换工具、固定公开实例选择、120 行原始实验结果及图表。旧恢复 API、单资源容量 1 的排程 API 和 Web v1 保持兼容。参见[实施进度](docs/IMPLEMENTATION_PROGRESS.md)与[已知限制](docs/rcpsp-mathematical-model.md)。
 
 ## 产品边界
 
@@ -18,9 +18,21 @@ ContinuityForge 是一个面向组织内部的系统韧性与业务连续性平�
 
 平台只负责分析、规划和演练记录。它不会直接操作生产系统、自动切换灾备，也不保存生产凭据。
 
+## 调度约束范围
+
+| 约束或能力 | v2 状态 |
+| --- | --- |
+| 单模式、固定整数工期、非抢占任务与 DAG 依赖 | 支持；零时长仅供无需求虚拟里程碑 |
+| 多类可再生资源、正整数容量与任务同时占用 | 支持；区间为 `[start, finish)` |
+| 最早开工、可选硬截止、可选总体目标 Makespan | 支持；整数溢出与非法输入拒绝 |
+| 独立排程验证、结构化违规、`FEASIBLE`/`UNKNOWN` | 支持；无解/最优证明由独立求解器或官方基准提供 |
+| 多执行模式、抢占、不可再生资源、动态容量、人员日历和随机工期 | 当前不支持 |
+
+[完整数学模型与算法边界](docs/rcpsp-mathematical-model.md)说明求解器超出拓扑排序的职责、下界的含义和适用条件。
+
 ## 目录约定
 
-后续实现遵循以下边界：
+主要目录：
 
 ```text
 ContinuityForge/
@@ -30,9 +42,10 @@ ContinuityForge/
 ├── bia.mbt     # RTO、RPO、最大中断时间与影响等级
 ├── impact.mbt  # 故障影响传播与稳定路径
 ├── recovery.mbt # 依赖约束、影响等级和资源窗口下的恢复排序
-├── scheduling/ # 独立的通用任务模型、调度基线与排程校验
+├── scheduling/ # 旧单资源 API 与 v2 多资源 RCPSP 库、独立验证器
 ├── adapters/   # 故障恢复与 CI 流水线到通用调度问题的映射
-├── benchmark/  # 固定种子、多规模的算法对比与 CSV/JSON/SVG 结果
+├── benchmark/  # 合成实验、PSPLIB 转换、CP-SAT 参照与原始实验产物
+├── cmd/rcpsp/ # v2 JSON 到 MoonBit JavaScript 的命令边界
 ├── playbook.mbt # 恢复步骤、前置条件与人工审批状态机
 ├── drill.mbt    # 演练状态与有序审计时间线
 ├── api.mbt      # 统一暴露经过校验的领域操作
@@ -51,11 +64,12 @@ ContinuityForge/
 ├── examples/
 │   ├── minimal/      # 可运行的领域闭环示例与脱敏输入
 │   ├── recovery_window/ # 资源独占、并行和恢复窗口案例
-│   └── ci_pipeline/ # 三个 Runner 上的构建、测试和打包排程
+│   ├── ci_pipeline/ # 旧版三个 Runner 排程
+│   └── rcpsp/ # v2 CI、故障恢复、项目及各自失败案例
 └── integration/ # 跨语言构建与集成验证
 ```
 
-当前 web、docs 和 examples 已提供最小可复核闭环，server 仍保留为后续服务端实现边界。2.0 重构新增的通用模型、三种调度基线与候选排程校验见 [docs/scheduling-interface.md](docs/scheduling-interface.md)；有预算的搜索机制见 [docs/optimized-scheduling.md](docs/optimized-scheduling.md)，小规模精确参照见 [docs/exact-reference.md](docs/exact-reference.md)。[故障恢复与 CI 适配器](docs/scenario-adapters.md)已调用同一通用核心，原有恢复 API 保持兼容。
+旧模型及 Web v1 的原有使用方式见 [docs/scheduling-interface.md](docs/scheduling-interface.md)、[docs/scenario-adapters.md](docs/scenario-adapters.md)。v2 模型见[数学定义](docs/rcpsp-mathematical-model.md)，版本化导入导出与迁移见[交换格式](docs/rcpsp-exchange.md)。现有故障恢复与 CI 适配器继续复用旧通用调度核心；v2 场景通过同一个新 `RcpspProblem` 接口运行。
 
 ## 开发原则
 
@@ -70,7 +84,7 @@ ContinuityForge/
 
 ### 安装环境
 
-安装 MoonBit 0.10.7 或更新版本（格式与接口检查建议使用 CI 固定的编译器 0.10.14+7d59c7ec9）、Node.js 20 或更新版本；如需预览 Web 工作区，再安装 Python 3。确认核心工具链：
+安装 MoonBit 工具链（CI 固定编译器 0.10.14+7d59c7ec9）、Node.js 22 或更新版本；独立 CP-SAT 对照还需要 Python 3.9 或更新版本及 `benchmark/reference/requirements.txt` 中固定的 OR-Tools 版本。预览 Web 工作区可用 Python 3 的静态服务器。确认核心工具链：
 
 ```text
 moon version --all
@@ -89,6 +103,27 @@ MoonBit 可从[官方安装页面](https://www.moonbitlang.com/download/)获取�
 git clone https://github.com/lllg123/ContinuityForge.git
 cd ContinuityForge
 ```
+
+### 运行资源受限调度最小示例
+
+此 v2 示例只依赖 MoonBit 和 Node.js；构建后，默认按 JSON 中的 `solve_options` 运行：
+
+```text
+moon build cmd/rcpsp --target js --release --deny-warn
+node integration/js/rcpsp-cli.mjs examples/rcpsp/ci.json
+node examples/rcpsp/check.mjs
+```
+
+CI 输入包含两个 Runner、容量 4 的内存以及同时需要 Runner/内存的两项编译。程序给出 `FEASIBLE`、11 分钟 Makespan、逐任务起止和有效下界；场景检查还确认把内存容量升到 5 会将工期缩到 10，并让独立验证器拒绝违反硬截止的旧排程。再运行 `examples/rcpsp/recovery.json` 与 `examples/rcpsp/project.json` 可得到 8 分钟与 11 天的可行计划。全部输入、失败例、验证与 RTO/RPO 边界见[三场景说明](examples/rcpsp/README.md)。
+
+如需独立最优性参照，安装 Python 依赖后运行：
+
+```text
+python -m pip install -r benchmark/reference/requirements.txt
+python benchmark/reference/ortools_rcpsp.py examples/rcpsp/ci.json
+```
+
+该 CI 教学输入的 CP-SAT 状态为 `OPTIMAL`、Makespan 11；MoonBit 验证器只证明排程可行，最优性证明来自 CP-SAT。[公开 PSPLIB 下载/转换步骤](benchmark/psplib/README.md)、[五算法实验复现](benchmark/rcpsp/README.md)和[原始结果](benchmark/rcpsp/results/raw.csv)可用于独立核对。
 
 ### 运行领域最小示例
 
@@ -116,9 +151,9 @@ python -m http.server 8765 --directory web
 
 运行 `moon run examples/ci_pipeline`。这是明确标注的合成案例：七个编译、检查、测试和打包阶段分配到三个独占 Runner；阶段间有前置依赖，互不阻塞的阶段可以并行。程序打印各阶段输入、三种基线与优化结果的完工时间、逐项起止时间、负载最高的 Runner、下界及 40 分钟目标是否达到。案例由 [流水线适配器](docs/scenario-adapters.md)调用与故障恢复相同的通用调度核心，时长不代表真实生产流水线。
 
-### 复现算法对比
+### 复现旧容量 1 的合成算法对比
 
-运行 `moon test benchmark/runner` 验证固定种子实例和指标边界；再按 [benchmark/README.md](benchmark/README.md) 的命令生成逐次 CSV/JSON、汇总 CSV、消融数据与两张 SVG 图表。覆盖 12–20、50–100、200 个任务的 Small、Medium、Large 案例，并额外用 6 个任务的实例验证已证明最优解的差距。数据均为合成输入，执行时间是本机测量值。
+旧容量 1 模型仍可运行：`moon test benchmark/runner` 验证固定种子实例和指标边界；再按 [benchmark/README.md](benchmark/README.md) 的命令生成逐次 CSV/JSON、汇总 CSV、消融数据与两张 SVG 图表。覆盖 12–20、50–100、200 个任务的 Small、Medium、Large 案例，并额外用 6 个任务的实例验证已证明最优解的差距。数据均为合成输入，执行时间是本机测量值。v2 的 PSPLIB 公开数据实验见[新实验报告](docs/rcpsp-experiment-report.md)。
 
 实验结果和无收益机制见 [基准与消融报告](docs/benchmark-report.md)。[算法设计](docs/algorithm-design.md)说明数学模型、恢复窗口和局部搜索的实际职责；[公开需求证据](docs/requirements-evidence.md)区分问题背景与尚缺的真实用户验证。[架构设计](docs/architecture.md)与 [English overview](docs/overview.en.md)概述跨场景调用和兼容边界。
 
@@ -131,15 +166,17 @@ moon fmt
 moon check --deny-warn
 moon build --target js --deny-warn
 node integration/js/smoke.mjs
+moon build cmd/rcpsp --target js --release --deny-warn
+node examples/rcpsp/check.mjs
 ```
 
-最后一条命令会启动 MoonBit 的 JavaScript 目标探针，并检查核心包返回的稳定标记。
+`integration/js/smoke.mjs` 检查原有 JavaScript 目标探针；`examples/rcpsp/check.mjs` 复核三个 v2 场景的可行排程和失败输入。
 
 web/ 是独立的静态工作区，可交给任意静态服务器预览；库存、BIA 和演练事件会保存到当前浏览器，Export evidence 会下载当前工作区的证据 JSON。
 
 ## 发布检查
 
-发布前运行以下检查，确保 MoonBit 核心、JavaScript 集成和静态工作区都可复核：
+发布前运行以下检查，确保 MoonBit 核心、JavaScript 集成和静态工作区都可复核。Python 对照命令需先安装上文固定的 OR-Tools 依赖：
 
 GitHub Actions 中的 `ContinuityForge CI` 会在 `main` 的推送和 Pull Request 上自动运行同一组门禁。
 
@@ -151,6 +188,10 @@ moon build --target all --deny-warn
 moon run examples/minimal
 moon run examples/recovery_window
 moon run examples/ci_pipeline
+moon build cmd/rcpsp --target js --release --deny-warn
+node examples/rcpsp/check.mjs
+node --check benchmark/rcpsp/run.mjs
+python benchmark/reference/check_scenarios.py
 node integration/js/smoke.mjs
 node --check web/app.js
 git diff --check
@@ -158,4 +199,4 @@ git diff --check
 
 ## 许可证
 
-本项目以 Apache License 2.0 发布，详见 [LICENSE](LICENSE)。
+本项目以 Apache License 2.0 发布，详见 [LICENSE](LICENSE)。可选的 OR-Tools 9.15.6755 对照工具自身亦为 Apache-2.0，版本固定在 `benchmark/reference/requirements.txt`；PSPLIB 官方允许下载用于算法评价，但未明确授权重分发原始数据，所以仓库不提交其 ZIP、`.sm` 文件或完整镜像，只提交转换器、来源与摘要。数据、算法和证据边界见[第三方与数据核查](docs/third-party-and-data.md)、[PSPLIB 说明](benchmark/psplib/README.md)及[CP-SAT 对照说明](docs/ortools-reference.md)。

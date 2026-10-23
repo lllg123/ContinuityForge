@@ -62,6 +62,18 @@ jobs:
           node integration/js/web-engine.mjs
           node integration/js/scheduling-workspace.mjs
 
+      - name: Verify RCPSP v2 scenarios and constraints
+        run: |
+          moon build cmd/rcpsp --target js --release --deny-warn
+          node examples/rcpsp/check.mjs
+          node --check benchmark/rcpsp/run.mjs
+
+      - name: Check CP-SAT scenario reference
+        run: |
+          python3 -m venv /tmp/continuityforge-reference
+          /tmp/continuityforge-reference/bin/python -m pip install -r benchmark/reference/requirements.txt
+          /tmp/continuityforge-reference/bin/python benchmark/reference/check_scenarios.py
+
       - name: Run minimal domain example
         run: moon run examples/minimal
 

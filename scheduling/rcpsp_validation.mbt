@@ -461,16 +461,20 @@ pub fn inspect_rcpsp_schedule(
     None => ()
   }
   for resource in problem.resources {
+    let amounts : Array[Int] = []
+    for entry in schedule {
+      let task = match rcpsp_task_index(problem.tasks, entry.task_id) {
+        Some(index) => problem.tasks[index]
+        None => abort("checked schedule task disappeared")
+      }
+      amounts.push(demand_for(task, resource.id))
+    }
     for anchor in schedule {
       let time = anchor.start
       let mut used = 0
-      for entry in schedule {
+      for index, entry in schedule {
         if entry.start <= time && time < entry.finish {
-          let task = match rcpsp_task_index(problem.tasks, entry.task_id) {
-            Some(index) => problem.tasks[index]
-            None => abort("checked schedule task disappeared")
-          }
-          let amount = demand_for(task, resource.id)
+          let amount = amounts[index]
           if amount > resource.capacity - used {
             issues.push(
               violation(

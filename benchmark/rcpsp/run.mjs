@@ -129,6 +129,7 @@ for (const entry of cases) {
         case_id: entry.id, source: entry.source, repeat, tasks: n,
         resources: problem.resources.length, time_unit: problem.time_unit,
         algorithm, status: result.status, feasible: check.feasible,
+        solver_diagnostic: result.diagnostic ?? null,
         validation_error: check.error, makespan,
         lower_bound: result.lower_bound ?? null,
         best_available_bound: bound, proven_optimum: proven,
@@ -213,6 +214,7 @@ writeFileSync(join(options.outputDir, "raw.json"), JSON.stringify({
   metadata: {
     node: process.version, platform: process.platform, arch: process.arch,
     moon: execFileSync("moon", ["version"], { cwd: root, encoding: "utf8" }).trim(),
+    python: execFileSync(options.python, ["--version"], { cwd: root, encoding: "utf8" }).trim(),
     repeats: options.repeats, search_budget: options.budget,
     cp_sat_time_limit_seconds: options.timeLimit,
     included_public_instances: Boolean(options.publicDir),
