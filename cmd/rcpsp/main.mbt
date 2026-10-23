@@ -29,6 +29,14 @@ pub fn solve_json(input : String, algorithm : String, budget : Int) -> String {
     }
     @scheduling.export_rcpsp_solution(result)
   } catch {
+    @scheduling.SchedulingError::InvalidTask(message)
+    | @scheduling.SchedulingError::InvalidResource(message)
+    | @scheduling.SchedulingError::InvalidDependency(message)
+    | @scheduling.SchedulingError::InvalidConstraint(message)
+    | @scheduling.SchedulingError::InvalidSchedule(message) => {
+      let escaped = @json.to_json(message).stringify()
+      "{\"error\":\{escaped}}"
+    }
     error => {
       let message = @json.to_json(error.to_string()).stringify()
       "{\"error\":\{message}}"
@@ -44,6 +52,14 @@ pub fn validate_json(problem_input : String, solution_input : String) -> String 
     let _ = @scheduling.import_rcpsp_solution(problem, solution_input)
     "{\"ok\":true}"
   } catch {
+    @scheduling.SchedulingError::InvalidTask(message)
+    | @scheduling.SchedulingError::InvalidResource(message)
+    | @scheduling.SchedulingError::InvalidDependency(message)
+    | @scheduling.SchedulingError::InvalidConstraint(message)
+    | @scheduling.SchedulingError::InvalidSchedule(message) => {
+      let escaped = @json.to_json(message).stringify()
+      "{\"ok\":false,\"error\":\{escaped}}"
+    }
     error => {
       let message = @json.to_json(error.to_string()).stringify()
       "{\"ok\":false,\"error\":\{message}}"
