@@ -8,6 +8,10 @@ pub fn evaluate_schedule(problem~ : SchedulingProblem, schedule~ : Array[Schedul
 
 pub fn exact_reference(SchedulingProblem, Int) -> ExactReference raise SchedulingError
 
+pub fn inspect_rcpsp_problem(RcpspProblem) -> Array[ConstraintViolation]
+
+pub fn inspect_rcpsp_schedule(RcpspProblem, Array[RcpspScheduleEntry]) -> Array[ConstraintViolation]
+
 pub fn optimality_gap_percent(AnalysisResult, ExactReference) -> Double raise SchedulingError
 
 pub fn optimize_schedule(SchedulingProblem, Int) -> OptimizationReport raise SchedulingError
@@ -16,7 +20,13 @@ pub fn optimize_schedule_with_features(SchedulingProblem, Int, Bool, Bool, Bool)
 
 pub fn run_baseline(SchedulingProblem, Baseline) -> AnalysisResult raise SchedulingError
 
+pub fn upgrade_exclusive_problem(SchedulingProblem) -> RcpspProblem raise SchedulingError
+
 pub fn validate_problem(SchedulingProblem) -> Unit raise SchedulingError
+
+pub fn validate_rcpsp_problem(RcpspProblem) -> Unit raise SchedulingError
+
+pub fn validate_rcpsp_schedule(RcpspProblem, Array[RcpspScheduleEntry]) -> Unit raise SchedulingError
 
 pub fn validate_schedule(SchedulingProblem, Array[ScheduleEntry]) -> Unit raise SchedulingError
 
@@ -40,6 +50,15 @@ pub(all) enum Baseline {
   StableTopological
   RecoveryHeuristic
   CriticalPath
+}
+
+pub(all) struct ConstraintViolation {
+  kind : String
+  task_id : String?
+  resource_id : String?
+  start : Int?
+  finish : Int?
+  message : String
 }
 
 pub(all) struct Constraints {
@@ -81,10 +100,47 @@ pub(all) struct OptimizationReport {
   budget : Int
 }
 
+pub(all) struct RcpspProblem {
+  tasks : Array[RcpspTask]
+  dependencies : Array[Dependency]
+  resources : Array[RenewableResource]
+  target_makespan : Int?
+}
+pub fn RcpspProblem::new(tasks~ : Array[RcpspTask], dependencies~ : Array[Dependency], resources~ : Array[RenewableResource], target_makespan~ : Int?) -> Self raise SchedulingError
+
+pub(all) struct RcpspScheduleEntry {
+  task_id : String
+  start : Int
+  finish : Int
+}
+pub fn RcpspScheduleEntry::new(task_id~ : String, start~ : Int, finish~ : Int) -> Self raise SchedulingError
+
+pub(all) struct RcpspTask {
+  id : String
+  duration : Int
+  priority : Int
+  demands : Array[ResourceDemand]
+  release_time : Int
+  deadline : Int?
+}
+pub fn RcpspTask::new(id~ : String, duration~ : Int, priority~ : Int, demands~ : Array[ResourceDemand], release_time~ : Int, deadline~ : Int?) -> Self raise SchedulingError
+
+pub(all) struct RenewableResource {
+  id : String
+  capacity : Int
+}
+pub fn RenewableResource::new(id~ : String, capacity~ : Int) -> Self raise SchedulingError
+
 pub(all) struct Resource {
   id : String
 }
 pub fn Resource::new(id~ : String) -> Self raise SchedulingError
+
+pub(all) struct ResourceDemand {
+  resource_id : String
+  amount : Int
+}
+pub fn ResourceDemand::new(resource_id~ : String, amount~ : Int) -> Self raise SchedulingError
 
 pub(all) struct ScheduleEntry {
   task_id : String
