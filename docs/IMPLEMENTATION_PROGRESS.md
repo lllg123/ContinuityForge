@@ -13,6 +13,6 @@
 | M6 系统性实验 | 已完成固定集初版 | [实验说明](../benchmark/rcpsp/README.md)与[报告](rcpsp-experiment-report.md)：8 输入×5 算法×3 次，120 行原始 JSON/CSV、汇总、图和局部搜索消融；公开质量反例与未证明界分开报告。 | 扩大公开样本时沿用固定选择规则并重跑。 |
 | M7 可复用 API/Schema | 已完成 v2 核心接口 | v2 JSON Schema、带求解参数的请求导入导出、求解、独立结果分析及外部结果验证；旧模型显式升级映射、Web v1 保持不变。见[交换格式](rcpsp-exchange.md)。 | M8 三场景失败例检验诊断。 |
 | M8 三场景验收 | 已完成教学案例验收 | [场景说明](../examples/rcpsp/README.md)包含三个完整输入、三个失败输入、执行命令、预期结果、独立验证拒绝、CP-SAT 无解证明和 RTO/RPO 边界。 | 生产数据与真实部署不在本阶段声称范围。 |
-| M9 工程开源验收 | 本地门禁已完成，待 GitHub CI | README 重定位、[模型定义](rcpsp-mathematical-model.md)、Schema、公开基准复现、[第三方/数据核查](third-party-and-data.md)、三场景说明及 v2 CI 门禁已加入。 | 提交并推送后确认远端 CI 全绿。 |
+| M9 工程开源验收 | 已完成 | README 重定位、[模型定义](rcpsp-mathematical-model.md)、Schema、公开基准复现、[第三方/数据核查](third-party-and-data.md)、三场景说明及 v2 CI 门禁已加入；[提交 `87d9833` 的远端 CI](https://github.com/lllg123/ContinuityForge/actions/runs/39911778845) 全部通过。 | 后续扩展另行评估。 |
 
 **兼容承诺：** 原有根包恢复 API、`scheduling` 旧构造器、Web v1 输入和已提交的合成基准保持可运行。新约束通过显式 v2 接口引入；任何行为变化都需单独记录与测试。项目书和 `任务说明.md` 是本地文件，不纳入仓库。
