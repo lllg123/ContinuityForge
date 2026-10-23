@@ -1,0 +1,26 @@
+{
+  "schema_version": "continuityforge.rcpsp.v2",
+  "time_unit": "minutes",
+  "resources": [
+    {"id": "runner", "capacity": 2},
+    {"id": "memory", "capacity": 4},
+    {"id": "signer", "capacity": 1}
+  ],
+  "tasks": [
+    {"id": "checkout", "duration": 1, "priority": 1, "demands": [{"resource_id": "runner", "amount": 1}], "release_time": 0},
+    {"id": "compile-a", "duration": 4, "priority": 5, "demands": [{"resource_id": "runner", "amount": 1}, {"resource_id": "memory", "amount": 2}], "release_time": 0},
+    {"id": "compile-b", "duration": 3, "priority": 4, "demands": [{"resource_id": "runner", "amount": 1}, {"resource_id": "memory", "amount": 3}], "release_time": 2},
+    {"id": "test-a", "duration": 2, "priority": 3, "demands": [{"resource_id": "runner", "amount": 1}, {"resource_id": "memory", "amount": 1}], "release_time": 0},
+    {"id": "package", "duration": 2, "priority": 2, "demands": [{"resource_id": "runner", "amount": 1}, {"resource_id": "memory", "amount": 1}], "release_time": 0},
+    {"id": "sign", "duration": 1, "priority": 1, "demands": [{"resource_id": "signer", "amount": 1}], "release_time": 0, "deadline": 12}
+  ],
+  "dependencies": [
+    {"task_id": "compile-a", "prerequisite_id": "checkout"},
+    {"task_id": "compile-b", "prerequisite_id": "checkout"},
+    {"task_id": "test-a", "prerequisite_id": "compile-a"},
+    {"task_id": "package", "prerequisite_id": "compile-b"},
+    {"task_id": "package", "prerequisite_id": "test-a"},
+    {"task_id": "sign", "prerequisite_id": "package"}
+  ],
+  "target_makespan": 12
+}

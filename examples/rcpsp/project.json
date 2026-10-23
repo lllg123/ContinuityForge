@@ -1,0 +1,25 @@
+{
+  "schema_version": "continuityforge.rcpsp.v2",
+  "time_unit": "days",
+  "resources": [
+    {"id": "engineer", "capacity": 2},
+    {"id": "lab", "capacity": 1}
+  ],
+  "tasks": [
+    {"id": "design", "duration": 2, "priority": 5, "demands": [{"resource_id": "engineer", "amount": 1}], "release_time": 0},
+    {"id": "procurement", "duration": 3, "priority": 2, "demands": [{"resource_id": "engineer", "amount": 1}], "release_time": 1},
+    {"id": "prototype", "duration": 4, "priority": 5, "demands": [{"resource_id": "engineer", "amount": 2}, {"resource_id": "lab", "amount": 1}], "release_time": 0},
+    {"id": "documentation", "duration": 2, "priority": 1, "demands": [{"resource_id": "engineer", "amount": 1}], "release_time": 0},
+    {"id": "validation", "duration": 2, "priority": 4, "demands": [{"resource_id": "engineer", "amount": 1}, {"resource_id": "lab", "amount": 1}], "release_time": 0},
+    {"id": "release", "duration": 1, "priority": 3, "demands": [{"resource_id": "engineer", "amount": 1}], "release_time": 0, "deadline": 12}
+  ],
+  "dependencies": [
+    {"task_id": "prototype", "prerequisite_id": "design"},
+    {"task_id": "documentation", "prerequisite_id": "design"},
+    {"task_id": "validation", "prerequisite_id": "prototype"},
+    {"task_id": "validation", "prerequisite_id": "procurement"},
+    {"task_id": "release", "prerequisite_id": "validation"},
+    {"task_id": "release", "prerequisite_id": "documentation"}
+  ],
+  "target_makespan": 12
+}

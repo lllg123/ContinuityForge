@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lllg123/ContinuityForge/blob/main/docs/schema/rcpsp-solution-v2.schema.json",
+  "title": "ContinuityForge RCPSP solver result v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "algorithm", "schedule", "candidates_evaluated", "accepted_moves", "budget", "elapsed_ms"],
+  "properties": {
+    "schema_version": { "const": "continuityforge.rcpsp.solution.v2" },
+    "status": { "enum": ["OPTIMAL", "FEASIBLE", "INFEASIBLE", "UNKNOWN"] },
+    "algorithm": { "type": "string", "minLength": 1 },
+    "schedule": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["task_id", "start", "finish"],
+        "properties": {
+          "task_id": { "type": "string", "minLength": 1 },
+          "start": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+          "finish": { "type": "integer", "minimum": 0, "maximum": 2147483647 }
+        }
+      }
+    },
+    "makespan": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+    "lower_bound": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+    "candidates_evaluated": { "type": "integer", "minimum": 0 },
+    "accepted_moves": { "type": "integer", "minimum": 0 },
+    "budget": { "type": "integer", "minimum": 0 },
+    "elapsed_ms": { "type": "integer", "minimum": 0 },
+    "diagnostic": { "type": "string" }
+  },
+  "$comment": "A FEASIBLE or OPTIMAL schedule is independently validated against the matching problem upon import; claims of optimality require external proof."
+}

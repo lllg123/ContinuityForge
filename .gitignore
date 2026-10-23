@@ -5,6 +5,8 @@ _build/
 node_modules/
 dist/
 coverage/
+__pycache__/
+*.pyc
 
 # Local databases and runtime data
 *.db

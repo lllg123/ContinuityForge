@@ -333,3 +333,29 @@ test "parallel capacity reduces makespan and hard release is respected" {
   assert_eq(serial_result.makespan, Some(6))
   try! @scheduling.validate_rcpsp_schedule(serial, serial_result.schedule)
 }
+
+///|
+test "v2 JSON roundtrip and imported solver result use independent validation" {
+  let original = rcpsp_example()
+  let encoded = try! @scheduling.export_rcpsp_problem(original, "minutes")
+  let problem = try! @scheduling.import_rcpsp_problem(encoded)
+  assert_eq(problem.tasks.length(), 3)
+  assert_eq(problem.resources[0].capacity, 4)
+  assert_eq(problem.tasks[0].release_time, 2)
+  assert_eq(problem.tasks[0].deadline, Some(5))
+  let result = try! @scheduling.solve_rcpsp(
+    problem,
+    @scheduling.RcpspAlgorithm::StableTopological,
+  )
+  let solution = @scheduling.export_rcpsp_solution(result)
+  let imported = try! @scheduling.import_rcpsp_solution(problem, solution)
+  assert_eq(imported.length(), problem.tasks.length())
+  try! @scheduling.validate_rcpsp_schedule(problem, imported)
+  let invalid = "{\"schema_version\":\"continuityforge.rcpsp.solution.v2\",\"status\":\"FEASIBLE\",\"algorithm\":\"external\",\"schedule\":[{\"task_id\":\"a\",\"start\":2,\"finish\":5},{\"task_id\":\"b\",\"start\":2,\"finish\":5},{\"task_id\":\"c\",\"start\":3,\"finish\":5}],\"makespan\":5,\"candidates_evaluated\":0,\"accepted_moves\":0,\"budget\":0,\"elapsed_ms\":0}"
+  try @scheduling.import_rcpsp_solution(problem, invalid) catch {
+    @scheduling.SchedulingError::InvalidSchedule(_) => ()
+    error => fail("wrong imported schedule error: \{error}")
+  } noraise {
+    _ => fail("expected invalid external schedule")
+  }
+}

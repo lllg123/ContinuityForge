@@ -1,0 +1,24 @@
+{
+  "schema_version": "continuityforge.rcpsp.v2",
+  "time_unit": "minutes",
+  "resources": [
+    {"id": "db-team", "capacity": 1},
+    {"id": "compute", "capacity": 2},
+    {"id": "network", "capacity": 1}
+  ],
+  "tasks": [
+    {"id": "isolate", "duration": 1, "priority": 9, "demands": [{"resource_id": "network", "amount": 1}], "release_time": 0},
+    {"id": "restore-db", "duration": 4, "priority": 8, "demands": [{"resource_id": "db-team", "amount": 1}, {"resource_id": "compute", "amount": 1}], "release_time": 0},
+    {"id": "restore-cache", "duration": 2, "priority": 5, "demands": [{"resource_id": "compute", "amount": 1}], "release_time": 1},
+    {"id": "verify-api", "duration": 2, "priority": 7, "demands": [{"resource_id": "compute", "amount": 1}, {"resource_id": "network", "amount": 1}], "release_time": 0},
+    {"id": "smoke", "duration": 1, "priority": 3, "demands": [{"resource_id": "network", "amount": 1}], "release_time": 0, "deadline": 8}
+  ],
+  "dependencies": [
+    {"task_id": "restore-db", "prerequisite_id": "isolate"},
+    {"task_id": "restore-cache", "prerequisite_id": "isolate"},
+    {"task_id": "verify-api", "prerequisite_id": "restore-db"},
+    {"task_id": "verify-api", "prerequisite_id": "restore-cache"},
+    {"task_id": "smoke", "prerequisite_id": "verify-api"}
+  ],
+  "target_makespan": 8
+}

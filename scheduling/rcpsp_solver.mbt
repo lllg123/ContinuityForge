@@ -16,7 +16,7 @@ pub(all) struct RcpspSolveResult {
   candidates_evaluated : Int
   accepted_moves : Int
   budget : Int
-  elapsed_ms : UInt64
+  elapsed_ms : Int
   diagnostic : String?
 }
 
@@ -277,7 +277,7 @@ fn rcpsp_result(
         candidates_evaluated,
         accepted_moves,
         budget,
-        elapsed_ms: @env.now() - started,
+        elapsed_ms: (@env.now() - started).to_int(),
         diagnostic: None,
       }
     None =>
@@ -289,7 +289,7 @@ fn rcpsp_result(
         candidates_evaluated,
         accepted_moves,
         budget,
-        elapsed_ms: @env.now() - started,
+        elapsed_ms: (@env.now() - started).to_int(),
         diagnostic: Some("no feasible schedule found within heuristic search"),
       }
   }

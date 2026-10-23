@@ -1,12 +1,24 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "lllg123/continuity_forge/scheduling"
 
+import {
+  "moonbitlang/core/json",
+}
+
 // Values
 pub fn critical_path(SchedulingProblem) -> CriticalPathSummary raise SchedulingError
 
 pub fn evaluate_schedule(problem~ : SchedulingProblem, schedule~ : Array[ScheduleEntry], algorithm~ : String) -> AnalysisResult raise SchedulingError
 
 pub fn exact_reference(SchedulingProblem, Int) -> ExactReference raise SchedulingError
+
+pub fn export_rcpsp_problem(RcpspProblem, String) -> String raise SchedulingError
+
+pub fn export_rcpsp_solution(RcpspSolveResult) -> String
+
+pub fn import_rcpsp_problem(String) -> RcpspProblem raise
+
+pub fn import_rcpsp_solution(RcpspProblem, String) -> Array[RcpspScheduleEntry] raise
 
 pub fn inspect_rcpsp_problem(RcpspProblem) -> Array[ConstraintViolation]
 
@@ -110,6 +122,34 @@ pub(all) enum RcpspAlgorithm {
   RecoveryHeuristic
 }
 
+type RcpspJsonDemand derive(ToJson, @json.FromJson)
+pub fn RcpspJsonDemand::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn RcpspJsonDemand::to_json(Self) -> Json
+
+type RcpspJsonDependency derive(ToJson, @json.FromJson)
+pub fn RcpspJsonDependency::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn RcpspJsonDependency::to_json(Self) -> Json
+
+type RcpspJsonEntry derive(ToJson, @json.FromJson)
+pub fn RcpspJsonEntry::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn RcpspJsonEntry::to_json(Self) -> Json
+
+type RcpspJsonProblem derive(ToJson, @json.FromJson)
+pub fn RcpspJsonProblem::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn RcpspJsonProblem::to_json(Self) -> Json
+
+type RcpspJsonResource derive(ToJson, @json.FromJson)
+pub fn RcpspJsonResource::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn RcpspJsonResource::to_json(Self) -> Json
+
+type RcpspJsonSolution derive(ToJson, @json.FromJson)
+pub fn RcpspJsonSolution::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn RcpspJsonSolution::to_json(Self) -> Json
+
+type RcpspJsonTask derive(ToJson, @json.FromJson)
+pub fn RcpspJsonTask::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn RcpspJsonTask::to_json(Self) -> Json
+
 pub(all) struct RcpspProblem {
   tasks : Array[RcpspTask]
   dependencies : Array[Dependency]
@@ -133,7 +173,7 @@ pub(all) struct RcpspSolveResult {
   candidates_evaluated : Int
   accepted_moves : Int
   budget : Int
-  elapsed_ms : UInt64
+  elapsed_ms : Int
   diagnostic : String?
 }
 
