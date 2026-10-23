@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { pathToFileURL } from "node:url"
 
-const [inputPath, algorithm = "budgeted-local-search", budgetText = "30"] = process.argv.slice(2)
+const [inputPath, algorithm = "from-input", budgetText = "30"] = process.argv.slice(2)
 if (!inputPath || !/^\d+$/.test(budgetText)) {
   process.stderr.write("usage: node integration/js/rcpsp-cli.mjs PROBLEM.json [algorithm] [budget]\n")
   process.exitCode = 2

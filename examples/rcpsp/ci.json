@@ -22,5 +22,6 @@
     {"task_id": "package", "prerequisite_id": "test-a"},
     {"task_id": "sign", "prerequisite_id": "package"}
   ],
-  "target_makespan": 12
+  "target_makespan": 12,
+  "solve_options": {"algorithm": "budgeted-local-search", "search_budget": 20, "time_limit_ms": 5000}
 }

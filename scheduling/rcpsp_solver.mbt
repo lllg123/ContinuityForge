@@ -13,6 +13,7 @@ pub(all) struct RcpspSolveResult {
   algorithm : String
   schedule : Array[RcpspScheduleEntry]
   makespan : Int?
+  lower_bound : Int
   candidates_evaluated : Int
   accepted_moves : Int
   budget : Int
@@ -243,6 +244,41 @@ fn rcpsp_makespan(schedule : Array[RcpspScheduleEntry]) -> Int {
 }
 
 ///|
+/// Longest release-aware precedence path, ignoring resources. It is a valid
+/// lower bound on Makespan, but generally weaker than a CP-SAT bound.
+pub fn rcpsp_lower_bound(problem : RcpspProblem) -> Int raise SchedulingError {
+  validate_rcpsp_problem(problem)
+  let order = rcpsp_order(problem, RcpspAlgorithm::StableTopological)
+  let completion : Array[Int] = []
+  for _ in problem.tasks {
+    completion.push(0)
+  }
+  let mut bound = 0
+  for index in order {
+    let task = problem.tasks[index]
+    let mut start = task.release_time
+    for edge in problem.dependencies {
+      if edge.task_id == task.id {
+        let before = match
+          rcpsp_task_index(problem.tasks, edge.prerequisite_id) {
+          Some(value) => value
+          None => abort("validated predecessor disappeared")
+        }
+        if completion[before] > start {
+          start = completion[before]
+        }
+      }
+    }
+    let finish = checked_finish(start, task.duration)
+    completion[index] = finish
+    if finish > bound {
+      bound = finish
+    }
+  }
+  bound
+}
+
+///|
 fn rcpsp_valid_candidate(
   problem : RcpspProblem,
   order : Array[Int],
@@ -260,13 +296,15 @@ fn rcpsp_valid_candidate(
 
 ///|
 fn rcpsp_result(
+  problem : RcpspProblem,
   algorithm : String,
   schedule : Array[RcpspScheduleEntry]?,
   candidates_evaluated : Int,
   accepted_moves : Int,
   budget : Int,
   started : UInt64,
-) -> RcpspSolveResult {
+) -> RcpspSolveResult raise SchedulingError {
+  let lower_bound = rcpsp_lower_bound(problem)
   match schedule {
     Some(value) =>
       {
@@ -274,6 +312,7 @@ fn rcpsp_result(
         algorithm,
         schedule: value,
         makespan: Some(rcpsp_makespan(value)),
+        lower_bound,
         candidates_evaluated,
         accepted_moves,
         budget,
@@ -286,6 +325,7 @@ fn rcpsp_result(
         algorithm,
         schedule: [],
         makespan: None,
+        lower_bound,
         candidates_evaluated,
         accepted_moves,
         budget,
@@ -304,6 +344,7 @@ pub fn solve_rcpsp(
   validate_rcpsp_problem(problem)
   let order = rcpsp_order(problem, algorithm)
   rcpsp_result(
+    problem,
     rcpsp_algorithm_name(algorithm),
     rcpsp_valid_candidate(problem, order),
     1,
@@ -411,6 +452,6 @@ pub fn optimize_rcpsp(
     }
   }
   rcpsp_result(
-    "budgeted-local-search", best, evaluations, moves, budget, started,
+    problem, "budgeted-local-search", best, evaluations, moves, budget, started,
   )
 }

@@ -51,6 +51,19 @@ pub extend RcpspJsonDependency with @json.FromJson::{from_json}
 pub extend RcpspJsonDependency with ToJson::{to_json}
 
 ///|
+struct RcpspJsonOptions {
+  algorithm : String
+  search_budget : Int
+  time_limit_ms : Int
+} derive(FromJson, ToJson)
+
+///|
+pub extend RcpspJsonOptions with @json.FromJson::{from_json}
+
+///|
+pub extend RcpspJsonOptions with ToJson::{to_json}
+
+///|
 struct RcpspJsonProblem {
   schema_version : String
   time_unit : String
@@ -58,6 +71,7 @@ struct RcpspJsonProblem {
   tasks : Array[RcpspJsonTask]
   dependencies : Array[RcpspJsonDependency]
   target_makespan : Int?
+  solve_options : RcpspJsonOptions?
 } derive(FromJson, ToJson)
 
 ///|
@@ -101,8 +115,8 @@ pub extend RcpspJsonSolution with @json.FromJson::{from_json}
 pub extend RcpspJsonSolution with ToJson::{to_json}
 
 ///|
-/// The canonical v2 exchange keeps all problem constraints, including null
-/// deadlines and target. Parsing is followed by the independent validator.
+/// The canonical v2 exchange keeps all problem constraints. Optional fields
+/// are omitted when absent. Parsing is followed by the independent validator.
 pub fn import_rcpsp_problem(input : String) -> RcpspProblem raise {
   let raw : RcpspJsonProblem = @json.from_json(@json.parse(input))
   if raw.schema_version != "continuityforge.rcpsp.v2" {
@@ -110,6 +124,16 @@ pub fn import_rcpsp_problem(input : String) -> RcpspProblem raise {
   }
   if raw.time_unit == "" {
     raise SchedulingError::InvalidConstraint("time_unit cannot be empty")
+  }
+  match raw.solve_options {
+    Some(value) => {
+      let _ = RcpspSolveOptions::new(
+        algorithm=value.algorithm,
+        search_budget=value.search_budget,
+        time_limit_ms=value.time_limit_ms,
+      )
+    }
+    None => ()
   }
   let resources : Array[RenewableResource] = []
   for resource in raw.resources {
@@ -198,7 +222,108 @@ pub fn export_rcpsp_problem(
     tasks,
     dependencies,
     target_makespan: problem.target_makespan,
+    solve_options: None,
   }).stringify()
+}
+
+///|
+/// Solver parameters are part of the request envelope, separate from the
+/// physical scheduling constraints. CP-SAT's time limit is advisory to its
+/// caller; the MoonBit heuristics use search_budget only.
+pub(all) struct RcpspSolveOptions {
+  algorithm : String
+  search_budget : Int
+  time_limit_ms : Int
+}
+
+///|
+pub fn RcpspSolveOptions::new(
+  algorithm~ : String,
+  search_budget~ : Int,
+  time_limit_ms~ : Int,
+) -> RcpspSolveOptions raise SchedulingError {
+  if algorithm != "stable-topological" &&
+    algorithm != "critical-path" &&
+    algorithm != "recovery-heuristic" &&
+    algorithm != "budgeted-local-search" {
+    raise SchedulingError::InvalidConstraint("unknown RCPSP algorithm")
+  }
+  if search_budget < 0 || time_limit_ms <= 0 {
+    raise SchedulingError::InvalidConstraint("invalid RCPSP solver budget")
+  }
+  { algorithm, search_budget, time_limit_ms, }
+}
+
+///|
+pub(all) struct RcpspRequest {
+  problem : RcpspProblem
+  time_unit : String
+  solve_options : RcpspSolveOptions
+}
+
+///|
+pub fn import_rcpsp_request(input : String) -> RcpspRequest raise {
+  let raw : RcpspJsonProblem = @json.from_json(@json.parse(input))
+  let problem = import_rcpsp_problem(input)
+  let options = match raw.solve_options {
+    Some(value) =>
+      RcpspSolveOptions::new(
+        algorithm=value.algorithm,
+        search_budget=value.search_budget,
+        time_limit_ms=value.time_limit_ms,
+      )
+    None =>
+      RcpspSolveOptions::new(
+        algorithm="budgeted-local-search",
+        search_budget=30,
+        time_limit_ms=5000,
+      )
+  }
+  { problem, time_unit: raw.time_unit, solve_options: options, }
+}
+
+///|
+pub fn export_rcpsp_request(request : RcpspRequest) -> String raise {
+  let options = RcpspSolveOptions::new(
+    algorithm=request.solve_options.algorithm,
+    search_budget=request.solve_options.search_budget,
+    time_limit_ms=request.solve_options.time_limit_ms,
+  )
+  let raw : RcpspJsonProblem = @json.from_json(
+    @json.parse(export_rcpsp_problem(request.problem, request.time_unit)),
+  )
+  @json.to_json(RcpspJsonProblem::{
+    schema_version: raw.schema_version,
+    time_unit: raw.time_unit,
+    resources: raw.resources,
+    tasks: raw.tasks,
+    dependencies: raw.dependencies,
+    target_makespan: raw.target_makespan,
+    solve_options: Some({
+      algorithm: options.algorithm,
+      search_budget: options.search_budget,
+      time_limit_ms: options.time_limit_ms,
+    }),
+  }).stringify()
+}
+
+///|
+pub fn solve_rcpsp_request(
+  request : RcpspRequest,
+) -> RcpspSolveResult raise SchedulingError {
+  let options = RcpspSolveOptions::new(
+    algorithm=request.solve_options.algorithm,
+    search_budget=request.solve_options.search_budget,
+    time_limit_ms=request.solve_options.time_limit_ms,
+  )
+  match options.algorithm {
+    "stable-topological" => solve_rcpsp(request.problem, StableTopological)
+    "critical-path" => solve_rcpsp(request.problem, CriticalPath)
+    "recovery-heuristic" => solve_rcpsp(request.problem, RecoveryHeuristic)
+    "budgeted-local-search" =>
+      optimize_rcpsp(request.problem, options.search_budget)
+    _ => abort("validated algorithm disappeared")
+  }
 }
 
 ///|
@@ -252,7 +377,7 @@ pub fn export_rcpsp_solution(result : RcpspSolveResult) -> String {
     algorithm: result.algorithm,
     schedule,
     makespan: result.makespan,
-    lower_bound: None,
+    lower_bound: Some(result.lower_bound),
     candidates_evaluated: result.candidates_evaluated,
     accepted_moves: result.accepted_moves,
     budget: result.budget,

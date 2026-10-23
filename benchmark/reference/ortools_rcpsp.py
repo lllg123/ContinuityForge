@@ -141,11 +141,14 @@ def solve(problem: dict, time_limit_seconds: float) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("problem", type=Path)
-    parser.add_argument("--time-limit", type=float, default=5.0)
+    parser.add_argument("--time-limit", type=float, help="override v2 solve_options.time_limit_ms")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     problem = json.loads(args.problem.read_text(encoding="utf-8"))
-    result = solve(problem, args.time_limit)
+    time_limit = args.time_limit
+    if time_limit is None:
+        time_limit = problem.get("solve_options", {}).get("time_limit_ms", 5000) / 1000
+    result = solve(problem, time_limit)
     encoded = json.dumps(result, ensure_ascii=False, separators=(",", ":")) + "\n"
     if args.output:
         args.output.write_text(encoded, encoding="utf-8")

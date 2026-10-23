@@ -20,5 +20,6 @@
     {"task_id": "verify-api", "prerequisite_id": "restore-cache"},
     {"task_id": "smoke", "prerequisite_id": "verify-api"}
   ],
-  "target_makespan": 8
+  "target_makespan": 8,
+  "solve_options": {"algorithm": "budgeted-local-search", "search_budget": 20, "time_limit_ms": 5000}
 }

@@ -21,5 +21,6 @@
     {"task_id": "release", "prerequisite_id": "validation"},
     {"task_id": "release", "prerequisite_id": "documentation"}
   ],
-  "target_makespan": 12
+  "target_makespan": 12,
+  "solve_options": {"algorithm": "budgeted-local-search", "search_budget": 20, "time_limit_ms": 5000}
 }

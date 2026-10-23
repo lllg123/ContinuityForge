@@ -4,6 +4,8 @@ pub fn solve_json(input : String, algorithm : String, budget : Int) -> String {
   try {
     let problem = @scheduling.import_rcpsp_problem(input)
     let result = match algorithm {
+      "from-input" =>
+        @scheduling.solve_rcpsp_request(@scheduling.import_rcpsp_request(input))
       "stable-topological" =>
         @scheduling.solve_rcpsp(
           problem,

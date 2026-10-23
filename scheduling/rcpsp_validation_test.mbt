@@ -359,3 +359,68 @@ test "v2 JSON roundtrip and imported solver result use independent validation" {
     _ => fail("expected invalid external schedule")
   }
 }
+
+///|
+test "versioned request retains solver parameters separately from constraints" {
+  let request : @scheduling.RcpspRequest = {
+    problem: rcpsp_example(),
+    time_unit: "minutes",
+    solve_options: try! @scheduling.RcpspSolveOptions::new(
+      algorithm="budgeted-local-search",
+      search_budget=4,
+      time_limit_ms=5000,
+    ),
+  }
+  let encoded = try! @scheduling.export_rcpsp_request(request)
+  let parsed = try! @scheduling.import_rcpsp_request(encoded)
+  assert_eq(parsed.solve_options.algorithm, "budgeted-local-search")
+  assert_eq(parsed.solve_options.search_budget, 4)
+  assert_eq(parsed.solve_options.time_limit_ms, 5000)
+  assert_eq(parsed.problem.tasks.length(), request.problem.tasks.length())
+  let result = try! @scheduling.solve_rcpsp_request(parsed)
+  assert_eq(result.status, "FEASIBLE")
+  assert_eq(result.budget, 4)
+  try! @scheduling.validate_rcpsp_schedule(parsed.problem, result.schedule)
+  try
+    @scheduling.RcpspSolveOptions::new(
+      algorithm="budgeted-local-search",
+      search_budget=-1,
+      time_limit_ms=5000,
+    )
+  catch {
+    @scheduling.SchedulingError::InvalidConstraint(_) => ()
+    _ => fail("wrong budget error")
+  } noraise {
+    _ => fail("expected invalid budget")
+  }
+}
+
+///|
+test "result analysis independently verifies feasibility and release-aware bound" {
+  let problem = rcpsp_example()
+  let result = try! @scheduling.optimize_rcpsp(problem, 4)
+  assert_eq(result.lower_bound, 7)
+  let analysis = try! @scheduling.analyze_rcpsp_result(problem, result)
+  assert_true(analysis.verified)
+  assert_eq(analysis.makespan, Some(7))
+  assert_eq(analysis.lower_bound, 7)
+  assert_eq(analysis.gap_to_bound_percent, Some(0.0))
+  assert_eq(analysis.bottleneck_resource, Some("cpu"))
+  match analysis.mean_resource_utilization {
+    Some(value) => assert_true(value > 0.4 && value < 0.5)
+    None => fail("expected resource utilization")
+  }
+  let impossible = try! @scheduling.RcpspProblem::new(
+    tasks=problem.tasks,
+    dependencies=problem.dependencies,
+    resources=problem.resources,
+    target_makespan=Some(6),
+  )
+  let unknown = try! @scheduling.optimize_rcpsp(impossible, 4)
+  let unknown_analysis = try! @scheduling.analyze_rcpsp_result(
+    impossible, unknown,
+  )
+  assert_eq(unknown_analysis.status, "UNKNOWN")
+  assert_true(!unknown_analysis.verified)
+  assert_eq(unknown_analysis.lower_bound, 7)
+}

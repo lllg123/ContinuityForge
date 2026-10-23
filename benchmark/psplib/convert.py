@@ -101,6 +101,11 @@ def parse_sm(text: str) -> dict:
         "resources": resources,
         "tasks": [task_by_id[job] for job in range(1, jobs + 1)],
         "dependencies": dependencies,
+        "solve_options": {
+            "algorithm": "budgeted-local-search",
+            "search_budget": 30,
+            "time_limit_ms": 5000,
+        },
     }
 
 

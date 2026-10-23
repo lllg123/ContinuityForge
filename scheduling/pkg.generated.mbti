@@ -6,6 +6,8 @@ import {
 }
 
 // Values
+pub fn analyze_rcpsp_result(RcpspProblem, RcpspSolveResult) -> RcpspAnalysis raise SchedulingError
+
 pub fn critical_path(SchedulingProblem) -> CriticalPathSummary raise SchedulingError
 
 pub fn evaluate_schedule(problem~ : SchedulingProblem, schedule~ : Array[ScheduleEntry], algorithm~ : String) -> AnalysisResult raise SchedulingError
@@ -14,9 +16,13 @@ pub fn exact_reference(SchedulingProblem, Int) -> ExactReference raise Schedulin
 
 pub fn export_rcpsp_problem(RcpspProblem, String) -> String raise SchedulingError
 
+pub fn export_rcpsp_request(RcpspRequest) -> String raise
+
 pub fn export_rcpsp_solution(RcpspSolveResult) -> String
 
 pub fn import_rcpsp_problem(String) -> RcpspProblem raise
+
+pub fn import_rcpsp_request(String) -> RcpspRequest raise
 
 pub fn import_rcpsp_solution(RcpspProblem, String) -> Array[RcpspScheduleEntry] raise
 
@@ -32,9 +38,13 @@ pub fn optimize_schedule(SchedulingProblem, Int) -> OptimizationReport raise Sch
 
 pub fn optimize_schedule_with_features(SchedulingProblem, Int, Bool, Bool, Bool) -> OptimizationReport raise SchedulingError
 
+pub fn rcpsp_lower_bound(RcpspProblem) -> Int raise SchedulingError
+
 pub fn run_baseline(SchedulingProblem, Baseline) -> AnalysisResult raise SchedulingError
 
 pub fn solve_rcpsp(RcpspProblem, RcpspAlgorithm) -> RcpspSolveResult raise SchedulingError
+
+pub fn solve_rcpsp_request(RcpspRequest) -> RcpspSolveResult raise SchedulingError
 
 pub fn upgrade_exclusive_problem(SchedulingProblem) -> RcpspProblem raise SchedulingError
 
@@ -122,6 +132,16 @@ pub(all) enum RcpspAlgorithm {
   RecoveryHeuristic
 }
 
+pub(all) struct RcpspAnalysis {
+  status : String
+  verified : Bool
+  makespan : Int?
+  lower_bound : Int
+  gap_to_bound_percent : Double?
+  mean_resource_utilization : Double?
+  bottleneck_resource : String?
+}
+
 type RcpspJsonDemand derive(ToJson, @json.FromJson)
 pub fn RcpspJsonDemand::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
 pub fn RcpspJsonDemand::to_json(Self) -> Json
@@ -133,6 +153,10 @@ pub fn RcpspJsonDependency::to_json(Self) -> Json
 type RcpspJsonEntry derive(ToJson, @json.FromJson)
 pub fn RcpspJsonEntry::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
 pub fn RcpspJsonEntry::to_json(Self) -> Json
+
+type RcpspJsonOptions derive(ToJson, @json.FromJson)
+pub fn RcpspJsonOptions::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn RcpspJsonOptions::to_json(Self) -> Json
 
 type RcpspJsonProblem derive(ToJson, @json.FromJson)
 pub fn RcpspJsonProblem::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
@@ -158,6 +182,12 @@ pub(all) struct RcpspProblem {
 }
 pub fn RcpspProblem::new(tasks~ : Array[RcpspTask], dependencies~ : Array[Dependency], resources~ : Array[RenewableResource], target_makespan~ : Int?) -> Self raise SchedulingError
 
+pub(all) struct RcpspRequest {
+  problem : RcpspProblem
+  time_unit : String
+  solve_options : RcpspSolveOptions
+}
+
 pub(all) struct RcpspScheduleEntry {
   task_id : String
   start : Int
@@ -165,11 +195,19 @@ pub(all) struct RcpspScheduleEntry {
 }
 pub fn RcpspScheduleEntry::new(task_id~ : String, start~ : Int, finish~ : Int) -> Self raise SchedulingError
 
+pub(all) struct RcpspSolveOptions {
+  algorithm : String
+  search_budget : Int
+  time_limit_ms : Int
+}
+pub fn RcpspSolveOptions::new(algorithm~ : String, search_budget~ : Int, time_limit_ms~ : Int) -> Self raise SchedulingError
+
 pub(all) struct RcpspSolveResult {
   status : String
   algorithm : String
   schedule : Array[RcpspScheduleEntry]
   makespan : Int?
+  lower_bound : Int
   candidates_evaluated : Int
   accepted_moves : Int
   budget : Int

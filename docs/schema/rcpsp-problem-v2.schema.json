@@ -55,7 +55,16 @@
         }
       }
     },
-    "target_makespan": { "type": "integer", "minimum": 0, "maximum": 2147483647 }
+    "target_makespan": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+    "solve_options": {
+      "type": "object", "additionalProperties": false,
+      "required": ["algorithm", "search_budget", "time_limit_ms"],
+      "properties": {
+        "algorithm": { "enum": ["stable-topological", "critical-path", "recovery-heuristic", "budgeted-local-search"] },
+        "search_budget": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+        "time_limit_ms": { "type": "integer", "minimum": 1, "maximum": 2147483647 }
+      }
+    }
   },
   "$comment": "Uniqueness, acyclicity, demand/capacity, milestone and time-overflow constraints are enforced by the MoonBit validator."
 }
