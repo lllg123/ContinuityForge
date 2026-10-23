@@ -14,11 +14,15 @@ pub fn inspect_rcpsp_schedule(RcpspProblem, Array[RcpspScheduleEntry]) -> Array[
 
 pub fn optimality_gap_percent(AnalysisResult, ExactReference) -> Double raise SchedulingError
 
+pub fn optimize_rcpsp(RcpspProblem, Int) -> RcpspSolveResult raise SchedulingError
+
 pub fn optimize_schedule(SchedulingProblem, Int) -> OptimizationReport raise SchedulingError
 
 pub fn optimize_schedule_with_features(SchedulingProblem, Int, Bool, Bool, Bool) -> OptimizationReport raise SchedulingError
 
 pub fn run_baseline(SchedulingProblem, Baseline) -> AnalysisResult raise SchedulingError
+
+pub fn solve_rcpsp(RcpspProblem, RcpspAlgorithm) -> RcpspSolveResult raise SchedulingError
 
 pub fn upgrade_exclusive_problem(SchedulingProblem) -> RcpspProblem raise SchedulingError
 
@@ -100,6 +104,12 @@ pub(all) struct OptimizationReport {
   budget : Int
 }
 
+pub(all) enum RcpspAlgorithm {
+  StableTopological
+  CriticalPath
+  RecoveryHeuristic
+}
+
 pub(all) struct RcpspProblem {
   tasks : Array[RcpspTask]
   dependencies : Array[Dependency]
@@ -114,6 +124,18 @@ pub(all) struct RcpspScheduleEntry {
   finish : Int
 }
 pub fn RcpspScheduleEntry::new(task_id~ : String, start~ : Int, finish~ : Int) -> Self raise SchedulingError
+
+pub(all) struct RcpspSolveResult {
+  status : String
+  algorithm : String
+  schedule : Array[RcpspScheduleEntry]
+  makespan : Int?
+  candidates_evaluated : Int
+  accepted_moves : Int
+  budget : Int
+  elapsed_ms : UInt64
+  diagnostic : String?
+}
 
 pub(all) struct RcpspTask {
   id : String

@@ -227,3 +227,109 @@ test "zero-duration empty milestone is legal" {
   )
   try! @scheduling.validate_rcpsp_schedule(p, [rcpsp_entry("start", 0, 0)])
 }
+
+///|
+test "all RCPSP policies decode multi-resource intervals and validate them" {
+  let problem = rcpsp_example()
+  for
+    algorithm in [
+      @scheduling.RcpspAlgorithm::StableTopological,
+      @scheduling.RcpspAlgorithm::CriticalPath,
+      @scheduling.RcpspAlgorithm::RecoveryHeuristic,
+    ] {
+    let result = try! @scheduling.solve_rcpsp(problem, algorithm)
+    assert_eq(result.status, "FEASIBLE")
+    assert_eq(result.makespan, Some(7))
+    assert_eq(result.candidates_evaluated, 1)
+    try! @scheduling.validate_rcpsp_schedule(problem, result.schedule)
+  }
+}
+
+///|
+test "budgeted search is deterministic and rejects an impossible target" {
+  let problem = rcpsp_example()
+  let first = try! @scheduling.optimize_rcpsp(problem, 5)
+  let second = try! @scheduling.optimize_rcpsp(problem, 5)
+  assert_eq(first.status, "FEASIBLE")
+  assert_eq(first.makespan, second.makespan)
+  assert_eq(first.candidates_evaluated, second.candidates_evaluated)
+  assert_true(first.candidates_evaluated >= 3)
+  assert_eq(first.budget, 5)
+  for i, entry in first.schedule {
+    assert_eq(entry.task_id, second.schedule[i].task_id)
+    assert_eq(entry.start, second.schedule[i].start)
+  }
+  try! @scheduling.validate_rcpsp_schedule(problem, first.schedule)
+  let impossible = try! @scheduling.RcpspProblem::new(
+    tasks=problem.tasks,
+    dependencies=problem.dependencies,
+    resources=problem.resources,
+    target_makespan=Some(6),
+  )
+  let result = try! @scheduling.optimize_rcpsp(impossible, 5)
+  assert_eq(result.status, "UNKNOWN")
+  assert_eq(result.makespan, None)
+}
+
+///|
+test "parallel capacity reduces makespan and hard release is respected" {
+  let tasks = [
+    try! @scheduling.RcpspTask::new(
+      id="first",
+      duration=3,
+      priority=0,
+      demands=[
+        try! @scheduling.ResourceDemand::new(resource_id="cpu", amount=2),
+      ],
+      release_time=0,
+      deadline=None,
+    ),
+    try! @scheduling.RcpspTask::new(
+      id="second",
+      duration=3,
+      priority=0,
+      demands=[
+        try! @scheduling.ResourceDemand::new(resource_id="cpu", amount=2),
+      ],
+      release_time=2,
+      deadline=Some(5),
+    ),
+  ]
+  let parallel = try! @scheduling.RcpspProblem::new(
+    tasks~,
+    dependencies=[],
+    resources=[try! @scheduling.RenewableResource::new(id="cpu", capacity=4)],
+    target_makespan=Some(5),
+  )
+  let parallel_result = try! @scheduling.solve_rcpsp(
+    parallel,
+    @scheduling.RcpspAlgorithm::StableTopological,
+  )
+  assert_eq(parallel_result.makespan, Some(5))
+  try! @scheduling.validate_rcpsp_schedule(parallel, parallel_result.schedule)
+  let serial_tasks = [
+    tasks[0],
+    try! @scheduling.RcpspTask::new(
+      id="second",
+      duration=3,
+      priority=0,
+      demands=[
+        try! @scheduling.ResourceDemand::new(resource_id="cpu", amount=2),
+      ],
+      release_time=2,
+      deadline=None,
+    ),
+  ]
+  let serial = try! @scheduling.RcpspProblem::new(
+    tasks=serial_tasks,
+    dependencies=[],
+    resources=[try! @scheduling.RenewableResource::new(id="cpu", capacity=2)],
+    target_makespan=None,
+  )
+  let serial_result = try! @scheduling.solve_rcpsp(
+    serial,
+    @scheduling.RcpspAlgorithm::StableTopological,
+  )
+  assert_eq(serial_result.makespan, Some(6))
+  try! @scheduling.validate_rcpsp_schedule(serial, serial_result.schedule)
+}

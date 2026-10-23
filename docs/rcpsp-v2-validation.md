@@ -6,4 +6,4 @@
 
 返回的 `ConstraintViolation` 含错误类别、可选任务 ID、资源 ID、起止时间和说明；`validate_rcpsp_problem`/`validate_rcpsp_schedule` 则把首个错误转换为现有 `SchedulingError`，方便旧调用方集成。时间类型为 MoonBit `Int`，任务的 `release_time + duration` 必须可表示，累计资源量在加法前与剩余容量比较。零时长任务只允许空需求，供 PSPLIB 虚拟起止节点使用。验证器检查候选排程是否合规，**不证明该问题存在解或给出最优性**。
 
-运行 `moon test scheduling` 可复核容量 4 下 2+1 并行、2+3 冲突、多资源独立超量、半开端点、释放/截止/总体目标、缺失任务、溢出、旧模型映射与零时长虚拟节点。v2 求解器尚未在本阶段实现；在它完成前，不能宣称新约束已端到端支持。
+运行 `moon test scheduling` 可复核容量 4 下 2+1 并行、2+3 冲突、多资源独立超量、半开端点、释放/截止/总体目标、缺失任务、溢出、旧模型映射与零时长虚拟节点。`solve_rcpsp` 和 `optimize_rcpsp` 使用本验证器检查每个完整候选；测试同时检查生成日程、重复运行确定性及不可满足目标时的 `UNKNOWN`。这仍是启发式搜索：`UNKNOWN` 只表示本次搜索未找到可行解，不代表已证明无解；`FEASIBLE` 也不表示最优。
